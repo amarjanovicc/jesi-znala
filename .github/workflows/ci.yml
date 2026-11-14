@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  provjera:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Sintaksa funkcija (api/)
+        run: for f in api/*.js; do node --check "$f"; done
+
+      - name: Sintaksa skripti u stranicama
+        run: |
+          node -e "
+          for (const f of ['public/index.html', 'public/admin.html']) {
+            const html = require('fs').readFileSync(f, 'utf8');
+            const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+            if (!scripts.length) throw new Error('nema skripte u ' + f);
+            scripts.forEach(s => new Function(s[1]));
+            console.log('OK', f, scripts.length + ' skripti');
+          }"
+
+      - name: Valjanost pisama (ista pravila kao u adminu)
+        run: |
+          node -e "
+          const { cleanLetter } = require('./api/_lib.js');
+          const letters = require('./data/facts.json');
+          let bad = 0;
+          letters.forEach((f, i) => { const r = cleanLetter(f); if (r.error) { bad++; console.log('Pismo ' + (i + 1) + ': ' + r.error); } });
+          if (bad) process.exit(1);
+          console.log(letters.length + ' pisama je valjano');"
+
+      - name: Konfiguracija (činovi i početak serije)
+        run: |
+          node -e "
+          const c = require('./data/config.json');
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(c.start)) throw new Error('start nije datum');
+          if (!Array.isArray(c.ranks) || !c.ranks.length || c.ranks[0].min !== 0) throw new Error('činovi nisu ispravni');
+          console.log('Konfiguracija OK:', c.ranks.length + ' činova');"

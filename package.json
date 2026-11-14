@@ -1,8 +1,11 @@
 {
   "name": "jesi-znala",
+  "version": "1.0.0",
   "private": true,
-  "version": "2.0.0",
   "description": "Dnevna igra s pismima i činjenicama, s adminom i obavijestima.",
+  "homepage": "https://jesi-znala.vercel.app",
+  "repository": { "type": "git", "url": "git+https://github.com/amarjanovicc/jesi-znala.git" },
+  "license": "UNLICENSED",
   "engines": { "node": ">=20" },
   "scripts": {
     "site": "python3 src/build.py",

@@ -1,5 +1,7 @@
 # Jesi znala?
 
+[![Izdanje](https://img.shields.io/github/v/release/amarjanovicc/jesi-znala?display_name=tag&label=izdanje)](https://github.com/amarjanovicc/jesi-znala/releases) [![CI](https://github.com/amarjanovicc/jesi-znala/actions/workflows/ci.yml/badge.svg)](https://github.com/amarjanovicc/jesi-znala/actions/workflows/ci.yml)
+
 Dnevna igra znanja u obliku pisma: svaki dan stigne jedno **pismo s kratkom pričom** iz povijesti, antike ili informatike, a nakon njega tri pitanja. Točno riješeno pismo postaje **marka u albumu**, a napredak se bilježi u **putovnici** s činovima i vizama. Uz igru dolazi **admin** za pisanje pisama i praćenje napretka te **obavijesti** kad igrač uđe u igru ili odigra pismo.
 
 *A daily knowledge game built as letters: one short story a day (history, antiquity, tech), three questions, a stamp album and a passport with ranks. Includes a password-protected admin and push notifications. Vanilla JS front end, Vercel serverless functions, Upstash Redis.*
@@ -20,6 +22,7 @@ Dnevna igra znanja u obliku pisma: svaki dan stigne jedno **pismo s kratkom pri�
 - [API](#api)
 - [Sigurnost i privatnost](#sigurnost-i-privatnost)
 - [Razvoj](#razvoj)
+- [Objava i izdanja](#objava-i-izdanja)
 - [Poznata ograničenja](#poznata-ograničenja)
 
 ---
@@ -125,11 +128,7 @@ npx vercel link
 
 Tajne se **nikad** ne stavljaju u kod ni u Git; vidi `.env.example`.
 
-**4. Objava**
-
-```bash
-npx vercel deploy --prod
-```
+**4. Objava.** Najlakše je povezati Vercel s GitHub repozitorijem (`npx vercel git connect`), pa se svaki push na `main` objavljuje sam. Ručno se objavljuje s `npx vercel deploy --prod`. Vidi [Objava i izdanja](#objava-i-izdanja).
 
 Nakon dodavanja ili promjene varijabli treba nova objava. Bez baze igra i dalje radi, ali bez sinkronizacije, admina i obavijesti.
 
@@ -206,9 +205,26 @@ npm run deploy      # build + vercel deploy --prod
 - Funkcije se lokalno mogu pokrenuti s `npx vercel dev` (potrebna je povezana baza i varijable okoline).
 - Skripta `build.py` koristi Node.js za čitanje popisa pisama i činova iz izvora.
 
+## Objava i izdanja
+
+- **Produkcija:** svaki push na `main` Vercel objavljuje na <https://jesi-znala.vercel.app>.
+- **Pregledi:** svaki pull request dobiva vlastitu pregled objavu (preview) s posebnim linkom.
+- **Provjera:** GitHub Actions (`.github/workflows/ci.yml`) pokreće se na svakom pushu i pull requestu.
+- **Izdanja:** svako izdanje je oznaka oblika `vX.Y.Z` i GitHub *release* s opisom; popis promjena je u [CHANGELOG.md](CHANGELOG.md).
+
+Novo izdanje:
+
+```bash
+# 1. dopuni CHANGELOG.md i povećaj "version" u package.json
+git commit -am "Izdanje 1.1.0"
+git tag v1.1.0
+git push origin main --tags
+gh release create v1.1.0 --title "v1.1.0" --notes-file <(sed -n '/^## \[1.1.0\]/,/^## \[/p' CHANGELOG.md | sed '$d')
+```
+
 ## Poznata ograničenja
 
-- **Nema automatskih testova** u repozitoriju. Provjere su rađene ručno i pomoćnim skriptama koje nisu dio projekta.
+- **Nema testova ponašanja.** CI provjerava samo sintaksu, valjanost pisama i konfiguraciju; ponašanje igre, admina i obavijesti provjereno je ručno i pomoćnim skriptama koje nisu dio projekta.
 - **Pisma su javna:** `/api/facts` vraća sva pisma odjednom, uključujući ona koja se tek trebaju otključati. Datum otključavanja kontrolira samo front end.
 - **Bez računa znači bez oporavka:** tko izgubi link za sinkronizaciju, izgubio je napredak (osim ako je lokalno u pregledniku).
 - **Redni broj je ključ:** pisma se ne mogu brisati ni premještati bez gubitka napretka.
