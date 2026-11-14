@@ -189,6 +189,13 @@ button.cell:active { transform: scale(.95) }
 .rk-bar { height: 8px; border: 1.5px solid var(--ink); border-radius: 1px; overflow: hidden }
 .rk-bar i { display: block; height: 100%; background: var(--pen); transition: width .5s var(--out) }
 .rk-next { font-size: 13px; line-height: 1.45; color: var(--soft); margin: 0 }
+.reply { display: flex; flex-direction: column; gap: 10px; background: var(--card); box-shadow: var(--lift); padding: 14px 16px; border-radius: 2px }
+.re-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.re-row button[data-act=re] { flex: 1 1 96px; min-height: 44px; border: 1.5px solid var(--ink); border-radius: 2px; padding: 6px 8px; font: 700 13px/1.2 var(--type); transition: transform .12s ease-out, background-color .2s ease, color .2s ease }
+.re-row button[data-act=re]:active { transform: scale(.97) }
+.re-row button[aria-pressed="true"] { background: var(--ink); color: var(--env) }
+.reply textarea { width: 100%; min-height: 76px; font: 16px/1.5 var(--type); color: var(--ink); background: transparent; border: 0; border-bottom: 1.5px solid var(--ink); border-radius: 0; padding: 6px 2px; resize: vertical }
+.reply .sent { font: 500 22px/1.15 var(--hand); color: var(--pen); flex: 1 1 140px; overflow-wrap: anywhere }
 .won { font: 700 26px/1.1 var(--hand); color: var(--red); transform: rotate(-1.5deg); align-self: flex-start }
 .recap { list-style: none; background: var(--card); box-shadow: var(--lift); padding: 4px 16px; border-radius: 2px }
 .recap li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 12px 0; border-top: 1px dashed var(--rule); font-size: 14.5px; line-height: 1.4 }
@@ -609,6 +616,7 @@ const VIEWS = {
       '<div class="frank' + (V.fresh ? ' fresh' : '') + '">' + postmark(V.i, V.fresh) + stamp(V.i, 'lg') + '<span class="big">' + big + '</span></div>' +
       (V.rankUp ? '<p class="won">Novi čin: ' + V.rankUp + '!</p>' : '') + (V.won && V.won.length ? '<p class="won">Nova viza: ' + V.won.join(', ') + '!</p>' : '') + '<p class="say">' + when + '</p>' +
       '<ul class="recap">' + qs.map(x => '<li class="' + (x.ok ? 'y' : 'n') + '"><i>' + (x.ok ? '✓' : '✗') + '</i><div>' + x.q + '<span>' + x.ans + '</span></div></li>').join('') + '</ul>' +
+      replyHtml(st) +
       '<div class="share"><span class="lbl">Javi kako ti je išlo</span><div class="share-row">' + a + WA + t + '">WhatsApp</a>' + a + 'https://twitter.com/intent/tweet?text=' + t + '">X</a><button class="btn alt" data-act="copy">Kopiraj</button></div></div>' +
       sheet(V.i, false) +
       '<div class="dock">' + (nx != null ? '<button class="btn" data-act="open" data-i="' + nx + '">Sljedeće pismo</button>' : '<button class="btn" data-act="home">U album</button>') + '</div>';
@@ -859,6 +867,23 @@ const SND = {
 };
 function feedback(ok) { SND.key(); setTimeout(ok ? SND.bell : SND.scratch, 180); }
 
+/* Odgovor adminu: reakcija na pismo i kratka poruka. Vidi se samo uz sinkronizaciju, jer putuje preko servera. */
+function replyHtml(st) {
+  if (!API || !SY.code) return '';
+  const b = (v, t) => '<button type="button" data-act="re" data-v="' + v + '" aria-pressed="' + (st.re === v) + '">' + t + '</button>';
+  return '<section class="reply"><span class="lbl">Što misliš o ovom pismu?</span><div class="re-row">' + b('z', 'Zanimljivo!') + b('k', 'Već sam znala') + b('n', 'Nisam znala') + '</div>' +
+    '<label class="lbl" for="msg">Napiši mi nešto (neobavezno)</label><textarea id="msg" maxlength="280" rows="3" placeholder="Poruka o ovom pismu"></textarea>' +
+    '<div class="re-row"><button type="button" class="btn alt" data-act="sendmsg" style="flex:0 0 auto">Pošalji poruku</button><span class="sent" id="msgst">' + (st.msg ? 'Poslano: „' + esc(st.msg) + '”' : '') + '</span></div></section>';
+}
+async function sendMsg(btn) {
+  const ta = $('msg'), t = (ta.value || '').trim().slice(0, 280), st = S.f[V.i];
+  if (!t || !st) return;
+  st.msg = t; st.mt = new Date().toISOString(); save(); btn.disabled = true; $('msgst').textContent = 'Šaljem…';
+  clearTimeout(pushT); await pushNow(); btn.disabled = false;
+  $('msgst').textContent = SY.err ? 'Nije poslano, probaj malo kasnije.' : 'Poslano!';
+  if (!SY.err) ta.value = '';
+}
+
 function shareText() {
   const f = FACTS[V.i], r = S.f[V.i].r, s = streak();
   return 'Jesi znala? Pismo № ' + no(V.i) + ': ' + f.title + '\n' + r.map(x => x ? '🟩' : '🟥').join('') + ' ' + r.filter(Boolean).length + '/3' + (s > 1 ? ' · ' + s + '. dan zaredom' : '') + '\nČin: ' + rankInfo(pointsOf(S.f)).name;
@@ -890,6 +915,8 @@ $('view').addEventListener('click', e => {
   else if (a === 'syncoff') syncOff();
   else if (a === 'copylink') copy(b, b.dataset.t);
   else if (a === 'snd') { S.snd = !sndOn(); save(); SND.key(); go('home', {}, false); bottom(); }
+  else if (a === 're') { const st = S.f[V.i]; if (st) { st.re = b.dataset.v; save(); SND.key(); b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === st.re))); } }
+  else if (a === 'sendmsg') sendMsg(b);
   else if (a === 'copy') copy(b, shareText());
   else if (a === 'copyask') copy(b, ASK_MORE);
   else if (a === 'ask') { go('home', { ask: true }, false); bottom(); }

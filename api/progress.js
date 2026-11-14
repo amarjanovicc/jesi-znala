@@ -5,25 +5,33 @@ const { redis, valid, clean, merge, summary, rankOf, getFacts, notify } = requir
 const pad = n => String(n).padStart(2, '0');
 const plural = (n, one, few, many) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? one : m >= 2 && m <= 4 && (h < 12 || h > 14) ? few : many; };
 
+const RE = { z: 'Zanimljivo!', k: 'Već je znala.', n: 'Nije znala.' };
+
 // Vraća [naslov, poruka] ili null ako nema ničeg za javiti.
 async function describe({ created, cur, merged, label }) {
   const { facts } = await getFacts();
   const titles = facts.map(f => f.title);
   const who = label || 'Ona';
   const before = cur ? cur.state : { f: {}, days: {}, week: {} };
-  const fresh = Object.keys(merged.f).filter(k => !before.f[k]).map(Number).sort((a, b) => a - b);
+  const keys = Object.keys(merged.f).map(Number).sort((a, b) => a - b);
+  const fresh = keys.filter(k => !before.f[k]);
   const weeks = Object.keys(merged.week).filter(k => !before.week[k]);
+  const msgs = keys.filter(k => merged.f[k].msg && merged.f[k].mt !== (before.f[k] || {}).mt);
+  const reacts = keys.filter(k => merged.f[k].re && merged.f[k].re !== (before.f[k] || {}).re);
   const sum = summary(merged, titles);
   const r0 = rankOf(before), r1 = rankOf(merged), up = r1.index > r0.index ? ' Novi čin: ' + r1.name + '!' : '';
   const tail = ' (' + sum.n + ' ' + plural(sum.n, 'pismo', 'pisma', 'pisama') + ' ukupno, ' + sum.streak + ' ' + plural(sum.streak, 'dan', 'dana', 'dana') + ' zaredom)' + up;
+  const ref = i => '№ ' + pad(i + 1) + ' „' + (titles[i] || '?') + '”';
   if (created) return ['Jesi znala? Novi uređaj', who + ': uređaj je povezan.' + (sum.n ? ' Već ima ' + sum.n + ' ' + plural(sum.n, 'pismo', 'pisma', 'pisama') + '.' : '')];
-  if (fresh.length) {
-    const parts = fresh.slice(0, 3).map(i => '№ ' + pad(i + 1) + ' „' + (titles[i] || '?') + '” ' + merged.f[i].r.filter(Boolean).length + '/3');
-    return ['Jesi znala? Odigrano', who + ': ' + parts.join(', ') + (fresh.length > 3 ? ' i još ' + (fresh.length - 3) : '') + tail];
-  }
-  if (weeks.length) { const w = merged.week[weeks[0]]; return ['Jesi znala? Nedjeljna razglednica', who + ': ' + w.r + '/' + w.n + tail]; }
-  if (up) return ['Jesi znala? Novi čin', who + ':' + up];
-  return null;
+  const lines = [];
+  msgs.slice(0, 2).forEach(i => lines.push(who + ' o pismu ' + ref(i) + ': „' + merged.f[i].msg + '”'));
+  if (fresh.length) lines.push(who + ': ' + fresh.slice(0, 3).map(i => ref(i) + ' ' + merged.f[i].r.filter(Boolean).length + '/3').join(', ') + (fresh.length > 3 ? ' i još ' + (fresh.length - 3) : '') + tail);
+  reacts.filter(i => !msgs.includes(i)).slice(0, 2).forEach(i => lines.push(who + ' o pismu ' + ref(i) + ': ' + RE[merged.f[i].re]));
+  if (weeks.length && !fresh.length) { const w = merged.week[weeks[0]]; lines.push(who + ': nedjeljna razglednica ' + w.r + '/' + w.n + tail); }
+  if (up && !fresh.length && !weeks.length) lines.push(who + ':' + up);
+  if (!lines.length) return null;
+  const title = msgs.length ? 'Jesi znala? Poruka' : fresh.length ? 'Jesi znala? Odigrano' : reacts.length ? 'Jesi znala? Reakcija' : weeks.length ? 'Jesi znala? Nedjeljna razglednica' : 'Jesi znala? Novi čin';
+  return [title, lines.join('\n')];
 }
 
 module.exports = async (req, res) => {

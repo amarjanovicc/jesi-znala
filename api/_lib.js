@@ -24,7 +24,13 @@ function clean(st) {
   if (isObj(st.f)) for (const k of Object.keys(st.f).slice(0, 500)) {
     const x = st.f[k];
     if (!/^\d{1,3}$/.test(k) || !isObj(x) || !Array.isArray(x.r) || x.r.length !== 3) continue;
-    out.f[k] = { r: x.r.map(Boolean), d: /^\d{4}-\d{2}-\d{2}$/.test(x.d) ? x.d : '', box: Math.min(9, Math.max(0, x.box | 0)), due: x.due == null ? null : (x.due | 0), rev: Math.min(999, Math.max(0, x.rev | 0)) };
+    const o = { r: x.r.map(Boolean), d: /^\d{4}-\d{2}-\d{2}$/.test(x.d) ? x.d : '', box: Math.min(9, Math.max(0, x.box | 0)), due: x.due == null ? null : (x.due | 0), rev: Math.min(999, Math.max(0, x.rev | 0)) };
+    if (['z', 'k', 'n'].includes(x.re)) o.re = x.re;                                   // reakcija: zanimljivo, već znala, nisam znala
+    if (typeof x.msg === 'string' && x.msg.trim()) {                                    // poruka adminu
+      o.msg = x.msg.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 280);
+      o.mt = typeof x.mt === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(x.mt) ? x.mt : new Date().toISOString();
+    }
+    out.f[k] = o;
   }
   if (isObj(st.days)) for (const k of Object.keys(st.days).slice(0, 4000)) if (/^\d{4}-\d{2}-\d{2}$/.test(k)) out.days[k] = 1;
   if (isObj(st.week)) for (const k of Object.keys(st.week).slice(0, 400)) {
@@ -39,9 +45,17 @@ function merge(a, b) {
   const out = { f: {}, days: Object.assign({}, a.days, b.days), week: Object.assign({}, a.week, b.week) };
   for (const k of new Set([...Object.keys(a.f), ...Object.keys(b.f)])) {
     const x = a.f[k], y = b.f[k];
-    out.f[k] = !x ? y : !y ? x : rank(x) >= rank(y) ? x : y;
+    out.f[k] = !x ? y : !y ? x : withReply(x, y, rank(x) >= rank(y) ? x : y);
   }
   return out;
+}
+// reakcija i poruka ne ovise o napretku: novija poruka pobjeđuje, a nova reakcija zamjenjuje staru
+function withReply(x, y, winner) {
+  const o = Object.assign({}, winner); delete o.re; delete o.msg; delete o.mt;
+  const m = ((y && y.mt) || '') >= ((x && x.mt) || '') ? y : x;
+  if (m && m.msg) { o.msg = m.msg; o.mt = m.mt; }
+  const re = (y && y.re) || (x && x.re); if (re) o.re = re;
+  return o;
 }
 
 // Isti izračun kao u igri: pismo 2 boda, čisti žig +1, zapamćeno +2. Popis činova dolazi iz data/config.json.
@@ -55,7 +69,7 @@ function rankOf(st) {
 function summary(st, titles) {
   const letters = Object.keys(st.f).map(Number).sort((a, b) => a - b).map(i => {
     const s = st.f[i];
-    return { i, title: titles[i] || '', score: s.r.filter(Boolean).length, d: s.d, due: s.due, learned: s.due == null };
+    return { i, title: titles[i] || '', score: s.r.filter(Boolean).length, d: s.d, due: s.due, learned: s.due == null, re: s.re || '', msg: s.msg || '', mt: s.mt || '' };
   });
   const days = Object.keys(st.days).sort();
   let streak = 0, cursor = days.length ? new Date(days[days.length - 1] + 'T12:00:00Z') : null;

@@ -141,6 +141,7 @@ function today0() { var t = new Date(); t.setHours(0, 0, 0, 0); return t; }
 function rndTopic() { var A = 'abcdefghjkmnpqrstuvwxyz23456789', b = new Uint8Array(20); crypto.getRandomValues(b); return 'jz-' + Array.prototype.map.call(b, function (x) { return A[x % A.length]; }).join(''); }
 function stableTopic() { var t = ''; try { t = localStorage.getItem('jz-topic') || ''; if (!t) { t = rndTopic(); localStorage.setItem('jz-topic', t); } } catch (e) { t = t || rndTopic(); } return t; }
 function copy(btn, text) { var done = function (ok) { btn.textContent = ok ? 'Kopirano' : 'Kopiraj ručno'; }; try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); } }
+var RE_L = { z: 'Zanimljivo!', k: 'Već je znala', n: 'Nije znala' };
 function note(text, kind) { return h('div', { class: 'msg ' + (kind || 'ok'), role: kind === 'err' ? 'alert' : 'status' }, text); }
 
 async function api(action, body, extra) {
@@ -210,10 +211,28 @@ async function viewOverview(page) {
   page.appendChild(h('h2', {}, 'Za napraviti'));
   if (!todo.length) page.appendChild(h('p', { class: 'st-ok' }, 'Sve je postavljeno.'));
   else page.appendChild(h('ul', { class: 'todo' }, todo.map(function (x) { return h('li', {}, h('span', {}, x[0]), x[1] ? h('button', { class: 'link', onclick: x[1][1] }, x[1][0]) : null); })));
+  var withMsg = P.filter(function (p) { return p.lastMsg; });
+  if (withMsg.length) {
+    page.appendChild(h('h2', {}, 'Poruke od nje'));
+    page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Igrač'), h('th', {}, 'Pismo'), h('th', {}, 'Poruka'), h('th', { class: 'hide-s' }, 'Kada'))),
+      h('tbody', {}, withMsg.map(function (p) { return h('tr', { class: 'click', onclick: function () { S.tab = 'players'; S.pid = p.id; render(); } }, h('td', {}, p.label || 'Bez oznake'), h('td', { class: 'hide-s' }, pad(p.lastMsg.i + 1) + ' ' + p.lastMsg.title), h('td', {}, p.lastMsg.msg), h('td', { class: 'hide-s' }, rel(p.lastMsg.mt))); }))));
+  }
   page.appendChild(h('h2', {}, 'Zadnja aktivnost'));
   if (!P.length) page.appendChild(h('p', { class: 'mute' }, 'Još nema igrača.'));
   else page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Igrač'), h('th', {}, 'Zadnji put'), h('th', { class: 'hide-s' }, 'Čin'), h('th', { class: 'r' }, 'Pisama'), h('th', { class: 'r' }, 'Niz'))),
     h('tbody', {}, P.slice(0, 6).map(function (p) { return h('tr', { class: 'click', onclick: function () { S.tab = 'players'; S.pid = p.id; render(); } }, h('td', {}, p.label || 'Bez oznake'), h('td', {}, rel(p.seen)), h('td', { class: 'hide-s' }, p.rank || '-'), h('td', { class: 'r' }, p.n + ' / ' + p.total), h('td', { class: 'r' }, p.streak)); }))));
+  backupBlock(page);
+}
+function backupBlock(page) {
+  var out = h('span', { class: 'small mute' });
+  page.appendChild(h('h2', {}, 'Sigurnosna kopija'));
+  page.appendChild(h('p', { class: 'mute small' }, 'Preuzima sva pisma i napredak igrača kao JSON datoteku (bez tajnih kodova za sinkronizaciju). Dobro je povremeno je spremiti.'));
+  page.appendChild(h('div', { class: 'tools' }, h('button', { class: 'btn', onclick: async function (e) {
+    e.target.disabled = true; var x = await api('export'); e.target.disabled = false;
+    if (!x.ok) { out.textContent = 'Nije uspjelo.'; return; }
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(x.j, null, 2)], { type: 'application/json' }));
+    a.download = 'jesi-znala-kopija-' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); a.remove(); out.textContent = 'Preuzeto.';
+  } }, 'Preuzmi kopiju'), out));
 }
 function newLetter() { S.tab = 'letters'; S.edit = { idx: -1, data: blank() }; if (!S.letters) { api('letters').then(function (r) { if (r.ok) { S.letters = r.j.letters; S.start = r.j.start; } render(); }); return; } render(); }
 
@@ -363,9 +382,15 @@ async function viewPlayer(page) {
   var p = r.j, lab = h('input', { type: 'text', maxlength: 30, value: p.label, placeholder: 'Oznaka', 'aria-label': 'Oznaka igrača', style: 'max-width:220px' }), saved = h('span', { class: 'small mute' });
   page.appendChild(back);
   page.appendChild(h('h1', { style: 'margin-top:6px' }, p.label || 'Igrač'));
-  page.appendChild(h('p', { class: 'mute' }, 'Zadnji put ' + rel(p.seen) + '. Povezan ' + (p.created ? dm(new Date(p.created)) : 'nepoznato') + '.'));
+  page.appendChild(h('p', { class: 'mute' }, 'Zadnji put ' + rel(p.seen) + '. Povezan ' + (p.created ? dm(new Date(p.created)) : 'nepoznato.')));
   page.appendChild(h('div', { class: 'tools' }, lab, h('button', { class: 'btn', onclick: async function () { var x = await api('labelPlayer', { id: p.id, label: lab.value }); saved.textContent = x.ok ? 'Spremljeno' : 'Greška'; } }, 'Spremi oznaku'), saved));
   page.appendChild(h('div', { class: 'facts' }, h('div', {}, h('b', {}, p.rank || '-'), h('span', {}, p.points + ' ' + plural(p.points, 'bod', 'boda', 'bodova'))), h('div', {}, h('b', {}, p.n + ' / ' + p.total), h('span', {}, 'pisama')), h('div', {}, h('b', {}, p.streak), h('span', {}, 'dana zaredom')), h('div', {}, h('b', {}, p.perfect), h('span', {}, 'čistih žigova')), h('div', {}, h('b', {}, p.learned), h('span', {}, 'zapamćeno')), h('div', {}, h('b', {}, p.weeks), h('span', {}, 'nedjeljnih'))));
+  var talk = p.letters.filter(function (l) { return l.re || l.msg; });
+  if (talk.length) {
+    page.appendChild(h('h2', {}, 'Reakcije i poruke'));
+    page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, '№'), h('th', {}, 'Pismo'), h('th', {}, 'Reakcija'), h('th', {}, 'Poruka'))),
+      h('tbody', {}, talk.slice().reverse().map(function (l) { return h('tr', {}, h('td', { class: 'no' }, pad(l.i + 1)), h('td', {}, l.title), h('td', {}, RE_L[l.re] || ''), h('td', {}, l.msg)); }))));
+  }
   page.appendChild(h('h2', {}, 'Odigrana pisma'));
   if (!p.letters.length) { page.appendChild(h('p', { class: 'mute' }, 'Još nije odigrala nijedno pismo.')); return; }
   page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, '№'), h('th', {}, 'Naslov'), h('th', { class: 'hide-s' }, 'Datum'), h('th', { class: 'r' }, 'Rezultat'))),

@@ -80,7 +80,9 @@ module.exports = async (req, res) => {
     if (action === 'players') {
       const { facts } = await getFacts(), titles = facts.map(f => f.title);
       const list = (await loadPlayers()).map(p => {
-        const s = summary(p.rec.state, titles); delete s.letters;
+        const s = summary(p.rec.state, titles);
+        const last = s.letters.filter(l => l.msg).sort((a, b) => String(b.mt).localeCompare(String(a.mt)))[0];
+        s.lastMsg = last ? { i: last.i, title: last.title, msg: last.msg, mt: last.mt } : null; s.messages = s.letters.filter(l => l.msg).length; delete s.letters;
         return Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null }, s);
       }).sort((a, b) => String(b.seen).localeCompare(String(a.seen)));
       return send(200, { players: list });
@@ -119,6 +121,12 @@ module.exports = async (req, res) => {
       await redis(['DEL', 'jz:seen:' + p.code]);
       if (p.rec.watch) await redis(['DEL', 'jz:w:' + p.rec.watch]);
       return send(200, { ok: true });
+    }
+
+    if (action === 'export') {   // sigurnosna kopija: pisma i napredak igrača (bez tajnih kodova za sinkronizaciju)
+      const { facts } = await getFacts();
+      const players = (await loadPlayers()).map(p => ({ label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null, state: p.rec.state }));
+      return send(200, { exportedAt: new Date().toISOString(), letters: facts, players });
     }
 
     if (action === 'testNotify') {
