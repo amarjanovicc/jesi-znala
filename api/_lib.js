@@ -97,7 +97,7 @@ async function getFacts() {
   return { facts: baseFacts(), source: 'base' };
 }
 
-const CATS = ['pov', 'geo', 'inf'];
+const CATS = ['pov', 'ant', 'geo', 'inf'];
 const txt = (s, max) => typeof s === 'string' && s.trim().length > 0 && s.length <= max;
 const num = n => typeof n === 'number' && isFinite(n);
 

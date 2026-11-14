@@ -7,9 +7,9 @@
 <title>Jesi znala? Admin</title>
 <style>
 :root { --bg:#F4F4F1; --panel:#FFFFFF; --ink:#1C1C1A; --mute:#6C6C66; --line:#DCDCD5; --soft:#EDEDE8; --accent:#2743A0; --on-accent:#FFFFFF; --danger:#B3261E; --ok:#1E6B3A; --warn:#8A5A00;
-  --pov:#A3402E; --geo:#17766A; --inf:#4B3FB0; --paper:#F1E6CC; --paper-ink:#2A2118; color-scheme: light; }
+  --pov:#A3402E; --geo:#17766A; --inf:#4B3FB0; --ant:#7A5A12; --paper:#F1E6CC; --paper-ink:#2A2118; color-scheme: light; }
 @media (prefers-color-scheme: dark) { :root { --bg:#141413; --panel:#1C1C1A; --ink:#E9E9E3; --mute:#9A9A92; --line:#33332F; --soft:#252522; --accent:#8EA6F2; --on-accent:#101010; --danger:#F08A82; --ok:#6CCB8E; --warn:#E6B25A;
-  --pov:#E08A76; --geo:#4DBFAE; --inf:#A59BF2; --paper:#3A3326; --paper-ink:#EDE3CB; color-scheme: dark; } }
+  --pov:#E08A76; --geo:#4DBFAE; --inf:#A59BF2; --ant:#D9B55A; --paper:#3A3326; --paper-ink:#EDE3CB; color-scheme: dark; } }
 * { box-sizing: border-box }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-variant-numeric: tabular-nums }
 button, input, select, textarea { font: inherit; color: inherit }
@@ -55,7 +55,7 @@ tr.click:hover td { background: var(--soft) }
 .no { color: var(--mute); width: 1%; white-space: nowrap }
 .cat { white-space: nowrap }
 .cat::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 6px }
-.cat.pov { color: var(--pov) } .cat.geo { color: var(--geo) } .cat.inf { color: var(--inf) }
+.cat.pov { color: var(--pov) } .cat.geo { color: var(--geo) } .cat.inf { color: var(--inf) } .cat.ant { color: var(--ant) }
 .st-ok { color: var(--ok) } .st-warn { color: var(--warn) } .st-off { color: var(--mute) } .st-bad { color: var(--danger) }
 
 .facts { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--line); background: var(--panel) }
@@ -109,8 +109,8 @@ details { margin-top: 10px } summary { cursor: pointer }
 <div id="app"></div>
 <script>
 /* Admin za "Jesi znala?". Sav tekst ide u DOM kao tekst (nikad kao HTML). */
-var CATS = { pov: 'Povijest', geo: 'Geografija', inf: 'Informatika' };
-var COLORS = { pov: '#A3402E', geo: '#17766A', inf: '#4B3FB0' };
+var CATS = { pov: 'Povijest', ant: 'Antika', geo: 'Geografija', inf: 'Informatika' };
+var COLORS = { pov: '#A3402E', ant: '#7A5A12', geo: '#17766A', inf: '#4B3FB0' };
 var TOKEN = ''; try { TOKEN = sessionStorage.getItem('jz-admin') || ''; } catch (e) {}
 var app = document.getElementById('app');
 var S = { tab: 'overview', letters: null, start: null, source: 'base', base: 0, players: null, status: null, edit: null, pid: null, timer: 0, q: '', cat: '' };
