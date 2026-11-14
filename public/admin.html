@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Jesi znala? Admin</title>
+<style>
+:root { --bg:#F4F4F1; --panel:#FFFFFF; --ink:#1C1C1A; --mute:#6C6C66; --line:#DCDCD5; --soft:#EDEDE8; --accent:#2743A0; --on-accent:#FFFFFF; --danger:#B3261E; --ok:#1E6B3A; --warn:#8A5A00;
+  --pov:#A3402E; --geo:#17766A; --inf:#4B3FB0; --paper:#F1E6CC; --paper-ink:#2A2118; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --panel:#1C1C1A; --ink:#E9E9E3; --mute:#9A9A92; --line:#33332F; --soft:#252522; --accent:#8EA6F2; --on-accent:#101010; --danger:#F08A82; --ok:#6CCB8E; --warn:#E6B25A;
+  --pov:#E08A76; --geo:#4DBFAE; --inf:#A59BF2; --paper:#3A3326; --paper-ink:#EDE3CB; color-scheme: dark; } }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-variant-numeric: tabular-nums }
+button, input, select, textarea { font: inherit; color: inherit }
+a { color: var(--accent) }
+
+.bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: stretch; gap: 20px; height: 48px; padding: 0 max(16px, env(safe-area-inset-left, 0px)); background: var(--panel); border-bottom: 1px solid var(--line) }
+.brand { align-self: center; font-weight: 700; white-space: nowrap }
+.brand span { color: var(--mute); font-weight: 400 }
+.tabs { display: flex; gap: 2px; overflow-x: auto; flex: 1; min-width: 0 }
+.tabs button { padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--mute); cursor: pointer; white-space: nowrap }
+.tabs button:hover { color: var(--ink) }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600 }
+.side { align-self: center; display: flex; gap: 14px; white-space: nowrap }
+
+.page { max-width: 1000px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 90px }
+h1 { font-size: 18px; margin: 0 0 4px }
+h2 { font-size: 13px; margin: 26px 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--mute) }
+h2:first-child { margin-top: 0 }
+p { margin: 0 0 8px }
+.mute { color: var(--mute) }
+.small { font-size: 13px }
+
+.btn { height: 34px; padding: 0 14px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); cursor: pointer; white-space: nowrap }
+.btn:hover { border-color: var(--mute) }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600 }
+.btn.danger { color: var(--danger) }
+.btn:disabled { opacity: .5; cursor: default }
+.link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px }
+.link.danger { color: var(--danger) }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+
+input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; padding: 7px 9px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px }
+textarea { min-height: 150px; resize: vertical; line-height: 1.5 }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--mute); margin: 12px 0 3px }
+
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line) }
+th { padding: 7px 10px; text-align: left; font-size: 12px; font-weight: 600; color: var(--mute); background: var(--soft); border-bottom: 1px solid var(--line); white-space: nowrap }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle }
+tr:last-child td { border-bottom: 0 }
+tr.click { cursor: pointer }
+tr.click:hover td { background: var(--soft) }
+.r { text-align: right }
+.no { color: var(--mute); width: 1%; white-space: nowrap }
+.cat { white-space: nowrap }
+.cat::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 6px }
+.cat.pov { color: var(--pov) } .cat.geo { color: var(--geo) } .cat.inf { color: var(--inf) }
+.st-ok { color: var(--ok) } .st-warn { color: var(--warn) } .st-off { color: var(--mute) } .st-bad { color: var(--danger) }
+
+.facts { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--line); background: var(--panel) }
+.facts > div { flex: 1 1 150px; padding: 12px 14px; border-right: 1px solid var(--line) }
+.facts > div:last-child { border-right: 0 }
+.facts b { display: block; font-size: 22px; font-weight: 600; line-height: 1.2 }
+.facts span { font-size: 12px; color: var(--mute) }
+.todo { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); background: var(--panel) }
+.todo li { padding: 9px 12px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; justify-content: space-between; align-items: baseline }
+.todo li:last-child { border-bottom: 0 }
+.tools { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap }
+.tools input[type=text] { flex: 1 1 180px; width: auto } .tools select { width: auto }
+
+.msg { padding: 8px 12px; margin: 0 0 12px; border: 1px solid var(--line); border-left-width: 3px; background: var(--panel) }
+.msg.ok { border-left-color: var(--ok) } .msg.err { border-left-color: var(--danger) }
+
+.edit { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; align-items: start }
+.group { background: var(--panel); border: 1px solid var(--line); padding: 4px 14px 14px; margin-bottom: 14px }
+.group > h3 { font-size: 13px; margin: 12px 0 0; font-weight: 600 }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px }
+.opt { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px }
+.opt input[type=radio] { margin: 0; width: 16px; height: 16px }
+.opt .x { width: 30px; height: 34px; padding: 0 }
+.actions { position: sticky; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)); margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))); background: var(--panel); border-top: 1px solid var(--line) }
+.actions .grow { flex: 1; min-width: 0 }
+.actions .msg { margin: 0 }
+
+.pv { position: sticky; top: 64px; border: 1px solid var(--line); background: var(--panel); padding: 12px 14px }
+.pv h2 { margin: 0 0 8px }
+.pv .stamp { float: right; width: 62px; height: 80px; margin: 0 0 6px 10px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-weight: 700; line-height: 1; padding: 4px; outline: 3px solid #FCFBF6; outline-offset: -3px; overflow: hidden }
+.pv .stamp small { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; margin-top: 3px; font-weight: 600 }
+.pv .paper { background: var(--paper); color: var(--paper-ink); padding: 12px; font: 13px/1.55 "Courier New", Courier, monospace; overflow: hidden; overflow-wrap: anywhere }
+.pv .paper b { display: block; text-transform: uppercase; text-decoration: underline; margin-bottom: 6px }
+.pv .hand { font: italic 15px/1.3 Georgia, serif; color: #27408B; margin-top: 8px }
+.pv ol { margin: 4px 0 8px; padding-left: 20px }
+.pv li.ok { color: var(--ok); font-weight: 600 }
+.pv .q { font-weight: 600; margin-top: 10px }
+
+code, .lnk { display: block; font: 12px/1.4 ui-monospace, Menlo, monospace; word-break: break-all; background: var(--soft); border: 1px solid var(--line); padding: 7px 9px; user-select: all }
+ol.steps { margin: 6px 0 10px; padding-left: 20px } ol.steps li { margin-bottom: 8px }
+details { margin-top: 10px } summary { cursor: pointer }
+.login { max-width: 340px; margin: 12vh auto 0; padding: 0 16px }
+.login form { background: var(--panel); border: 1px solid var(--line); padding: 18px }
+[hidden] { display: none !important }
+@media (max-width: 860px) { .edit { grid-template-columns: 1fr } .pv { position: static } .hide-s { display: none } .side .small-hide { display: none } .bar { height: auto; flex-wrap: wrap; gap: 0 12px; padding-top: 8px } .brand { flex: 1; align-self: center } .side { order: 2 } .tabs { order: 3; flex: 1 0 100%; margin: 0 -6px } .tabs button { min-height: 40px } .pv { top: 0 } }
+@media (max-width: 520px) { .two, .three { grid-template-columns: 1fr } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* Admin za "Jesi znala?". Sav tekst ide u DOM kao tekst (nikad kao HTML). */
+var CATS = { pov: 'Povijest', geo: 'Geografija', inf: 'Informatika' };
+var COLORS = { pov: '#A3402E', geo: '#17766A', inf: '#4B3FB0' };
+var TOKEN = ''; try { TOKEN = sessionStorage.getItem('jz-admin') || ''; } catch (e) {}
+var app = document.getElementById('app');
+var S = { tab: 'overview', letters: null, start: null, source: 'base', base: 0, players: null, status: null, edit: null, pid: null, timer: 0, q: '', cat: '' };
+var DIRTY = false;
+window.addEventListener('beforeunload', function (e) { if (DIRTY) { e.preventDefault(); e.returnValue = ''; } });
+
+function h(tag, attrs) {
+  var el = document.createElement(tag), kids = Array.prototype.slice.call(arguments, 2);
+  Object.keys(attrs || {}).forEach(function (k) {
+    var v = attrs[k];
+    if (k === 'class') el.className = v; else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+    else if (k === 'value') el.value = v; else if (v === true) el.setAttribute(k, ''); else if (v !== false && v != null) el.setAttribute(k, v);
+  });
+  kids.flat(Infinity).forEach(function (c) { if (c != null && c !== false) el.appendChild(c.nodeType ? c : document.createTextNode(String(c))); });
+  return el;
+}
+function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
+function pad(n) { return String(n).padStart(2, '0'); }
+function plural(n, a, b, c) { var m = n % 10, k = n % 100; return m === 1 && k !== 11 ? a : (m >= 2 && m <= 4 && (k < 12 || k > 14)) ? b : c; }
+function rel(iso) {
+  if (!iso) return 'nikad'; var s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 90) return 'upravo sad'; var m = Math.round(s / 60); if (m < 60) return 'prije ' + m + ' min';
+  var hr = Math.round(m / 60); if (hr < 36) return 'prije ' + hr + ' ' + plural(hr, 'sat', 'sata', 'sati'); var d = Math.round(hr / 24); return 'prije ' + d + ' ' + plural(d, 'dan', 'dana', 'dana');
+}
+function dateOf(start, i) { var p = start.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2] + i); }
+function dm(d) { return d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + '.'; }
+function today0() { var t = new Date(); t.setHours(0, 0, 0, 0); return t; }
+function rndTopic() { var A = 'abcdefghjkmnpqrstuvwxyz23456789', b = new Uint8Array(20); crypto.getRandomValues(b); return 'jz-' + Array.prototype.map.call(b, function (x) { return A[x % A.length]; }).join(''); }
+function stableTopic() { var t = ''; try { t = localStorage.getItem('jz-topic') || ''; if (!t) { t = rndTopic(); localStorage.setItem('jz-topic', t); } } catch (e) { t = t || rndTopic(); } return t; }
+function copy(btn, text) { var done = function (ok) { btn.textContent = ok ? 'Kopirano' : 'Kopiraj ručno'; }; try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); } }
+function note(text, kind) { return h('div', { class: 'msg ' + (kind || 'ok'), role: kind === 'err' ? 'alert' : 'status' }, text); }
+
+async function api(action, body, extra) {
+  var r = await fetch('/api/admin?action=' + action + (extra || ''), { method: body !== undefined ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + TOKEN }, body: body !== undefined ? JSON.stringify(body) : undefined });
+  var j = {}; try { j = await r.json(); } catch (e) {}
+  if (r.status === 401 && action !== 'login') { logout(); throw new Error('auth'); }
+  return { ok: r.ok, status: r.status, j: j };
+}
+function logout() { TOKEN = ''; DIRTY = false; try { sessionStorage.removeItem('jz-admin'); } catch (e) {} clearInterval(S.timer); renderLogin(); }
+
+/* ---------- prijava ---------- */
+function renderLogin(msg) {
+  clear(app);
+  var pw = h('input', { type: 'password', id: 'pw', autocomplete: 'current-password', 'aria-label': 'Lozinka' });
+  var out = h('div', { 'aria-live': 'polite' }, msg ? note(msg, 'err') : null);
+  var go = async function (e) {
+    e.preventDefault(); if (!pw.value) return;
+    var r = await api('login', { password: pw.value });
+    if (r.ok) { TOKEN = r.j.token; try { sessionStorage.setItem('jz-admin', TOKEN); } catch (x) {} start(); return; }
+    if (r.status === 503) return renderLogin('Admin još nema lozinku. U Vercelu postavi varijablu ADMIN_PASSWORD i ponovo objavi (vidi README).');
+    if (r.status === 429) return renderLogin('Previše pokušaja. Pričekaj 15 minuta.');
+    renderLogin('Pogrešna lozinka.');
+  };
+  app.appendChild(h('div', { class: 'login' }, h('h1', {}, 'Jesi znala? admin'), h('form', { onsubmit: go }, h('label', { for: 'pw', style: 'margin-top:0' }, 'Lozinka'), pw, h('div', { style: 'margin-top:10px' }, out), h('button', { class: 'btn primary', type: 'submit' }, 'Prijavi se'))));
+  pw.focus();
+}
+
+/* ---------- okvir ---------- */
+var TABS = [['overview', 'Pregled'], ['letters', 'Pisma'], ['players', 'Igrači'], ['notify', 'Obavijesti']];
+function go(tab) {
+  if (DIRTY && !confirm('Imaš nespremljene izmjene. Odbaciti ih?')) return;
+  DIRTY = false; S.tab = tab; S.edit = null; S.pid = null; render();
+}
+function render() {
+  clearInterval(S.timer); clear(app); document.onkeydown = null;
+  app.appendChild(h('div', { class: 'bar' }, h('div', { class: 'brand' }, 'Jesi znala? ', h('span', {}, 'admin')),
+    h('div', { class: 'tabs', role: 'tablist' }, TABS.map(function (t) { return h('button', { role: 'tab', 'aria-selected': S.tab === t[0] ? 'true' : 'false', onclick: function () { go(t[0]); } }, t[1]); })),
+    h('div', { class: 'side small' }, h('a', { class: 'small-hide', href: '/', target: '_blank', rel: 'noopener' }, 'Igra'), h('button', { class: 'link', onclick: logout }, 'Odjava'))));
+  var page = h('div', { class: 'page', id: 'page' }); app.appendChild(page);
+  if (S.tab === 'overview') return viewOverview(page);
+  if (S.tab === 'letters') return S.edit ? viewEditor(page) : viewLetters(page);
+  if (S.tab === 'players') return S.pid ? viewPlayer(page) : viewPlayers(page);
+  return viewNotify(page);
+}
+function loading(p) { p.appendChild(h('p', { class: 'mute' }, 'Učitavam…')); }
+
+/* ---------- pregled ---------- */
+async function viewOverview(page) {
+  loading(page);
+  var res = await Promise.all([api('status'), api('letters'), api('players')]); clear(page);
+  var st = res[0].j, L = res[1].j, P = (res[2].j.players || []);
+  if (!res[0].ok || !res[1].ok) { page.appendChild(note('Ne mogu učitati podatke.', 'err')); return; }
+  var t0 = today0(), live = 0; L.letters.forEach(function (f, i) { if (dateOf(L.start, i) <= t0) live++; });
+  var next = L.letters.map(function (f, i) { return { f: f, i: i, d: dateOf(L.start, i) }; }).filter(function (x) { return x.d > t0; })[0];
+  page.appendChild(h('h2', {}, 'Stanje'));
+  page.appendChild(h('div', { class: 'facts' },
+    h('div', {}, h('b', {}, L.letters.length), h('span', {}, 'pisama ukupno')),
+    h('div', {}, h('b', {}, live), h('span', {}, 'objavljeno')),
+    h('div', {}, h('b', {}, next ? dm(next.d).slice(0, -5) : '-'), h('span', {}, next ? 'sljedeće: ' + next.f.title : 'nema zakazanih pisama')),
+    h('div', {}, h('b', {}, P.length), h('span', {}, plural(P.length, 'igrač', 'igrača', 'igrača')))));
+  var ch = st.channels, any = ch.ntfy || ch.telegram || ch.email, todo = [], remaining = L.letters.length - live;
+  if (!st.storage) todo.push(['Baza nije povezana. Sinkronizacija i uređivanje pisama ne rade.', null]);
+  if (!any) todo.push(['Obavijesti nisu postavljene, pa ne znaš kad ona uđe u igru.', ['Postavi', function () { go('notify'); }]]);
+  if (!P.length) todo.push(['Nema povezanih igrača. Napravi link i pošalji ga.', ['Napravi link', function () { go('players'); }]]);
+  if (remaining <= 0) todo.push(['Sva su pisma objavljena. Dodaj nova.', ['Novo pismo', newLetter]]);
+  else if (remaining < 4) todo.push(['Pisama je ostalo za još ' + remaining + ' ' + plural(remaining, 'dan', 'dana', 'dana') + '. Vrijeme je za nova.', ['Novo pismo', newLetter]]);
+  page.appendChild(h('h2', {}, 'Za napraviti'));
+  if (!todo.length) page.appendChild(h('p', { class: 'st-ok' }, 'Sve je postavljeno.'));
+  else page.appendChild(h('ul', { class: 'todo' }, todo.map(function (x) { return h('li', {}, h('span', {}, x[0]), x[1] ? h('button', { class: 'link', onclick: x[1][1] }, x[1][0]) : null); })));
+  page.appendChild(h('h2', {}, 'Zadnja aktivnost'));
+  if (!P.length) page.appendChild(h('p', { class: 'mute' }, 'Još nema igrača.'));
+  else page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Igrač'), h('th', {}, 'Zadnji put'), h('th', { class: 'hide-s' }, 'Čin'), h('th', { class: 'r' }, 'Pisama'), h('th', { class: 'r' }, 'Niz'))),
+    h('tbody', {}, P.slice(0, 6).map(function (p) { return h('tr', { class: 'click', onclick: function () { S.tab = 'players'; S.pid = p.id; render(); } }, h('td', {}, p.label || 'Bez oznake'), h('td', {}, rel(p.seen)), h('td', { class: 'hide-s' }, p.rank || '-'), h('td', { class: 'r' }, p.n + ' / ' + p.total), h('td', { class: 'r' }, p.streak)); }))));
+}
+function newLetter() { S.tab = 'letters'; S.edit = { idx: -1, data: blank() }; if (!S.letters) { api('letters').then(function (r) { if (r.ok) { S.letters = r.j.letters; S.start = r.j.start; } render(); }); return; } render(); }
+
+/* ---------- pisma ---------- */
+function blank() { return { cat: 'pov', title: '', fig: '', figu: '', story: '', q: '', opts: ['', ''], a: 0, quiz: [{ q: '', opts: ['', ''], a: 0 }, { q: '', opts: ['', ''], a: 0 }], note: '' }; }
+async function viewLetters(page, flash) {
+  loading(page);
+  var r = await api('letters'); if (!r.ok) { clear(page).appendChild(note('Ne mogu učitati pisma.', 'err')); return; }
+  S.letters = r.j.letters; S.start = r.j.start; S.source = r.j.source; S.base = r.j.base;
+  clear(page); if (flash) page.appendChild(flash);
+  var t0 = today0(), body = h('tbody');
+  var fill = function () {
+    clear(body); var q = S.q.trim().toLowerCase(), n = 0;
+    S.letters.forEach(function (f, i) {
+      if (S.cat && f.cat !== S.cat) return; if (q && (f.title + ' ' + f.story).toLowerCase().indexOf(q) < 0) return; n++;
+      var d = dateOf(S.start, i), live = d <= t0;
+      body.appendChild(h('tr', { class: 'click', onclick: function () { S.edit = { idx: i, data: JSON.parse(JSON.stringify(f)) }; render(); } },
+        h('td', { class: 'no' }, pad(i + 1)), h('td', {}, f.title), h('td', { class: 'hide-s' }, h('span', { class: 'cat ' + f.cat }, CATS[f.cat])), h('td', { class: 'hide-s' }, f.fig + (f.figu ? ' ' + f.figu : '')),
+        h('td', { class: live ? 'st-ok' : 'st-warn' }, dm(d)), h('td', { class: 'r hide-s ' + (live ? 'st-ok' : 'st-warn') }, live ? 'objavljeno' : 'čeka')));
+    });
+    if (!n) body.appendChild(h('tr', {}, h('td', { colspan: 6, class: 'mute' }, 'Nema pisama za taj filtar.')));
+  };
+  page.appendChild(h('div', { class: 'tools' },
+    h('input', { type: 'text', placeholder: 'Traži po naslovu ili priči', 'aria-label': 'Traži', value: S.q, oninput: function (e) { S.q = e.target.value; fill(); } }),
+    h('select', { 'aria-label': 'Kategorija', onchange: function (e) { S.cat = e.target.value; fill(); } }, h('option', { value: '' }, 'Sve kategorije'), Object.keys(CATS).map(function (k) { return h('option', { value: k, selected: S.cat === k }, CATS[k]); })),
+    h('button', { class: 'btn primary', onclick: newLetter }, 'Novo pismo')));
+  page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, '№'), h('th', {}, 'Naslov'), h('th', { class: 'hide-s' }, 'Kategorija'), h('th', { class: 'hide-s' }, 'Marka'), h('th', {}, 'Otključava se'), h('th', { class: 'hide-s' }, ''))), body));
+  fill();
+  page.appendChild(h('p', { class: 'mute small', style: 'margin-top:10px' }, 'Pisma se mogu uređivati i dodavati, ali ne brisati: napredak igrača vezan je uz redni broj. Jedno se otključava svaki dan od ' + dm(dateOf(S.start, 0)) + ' ' + (S.source === 'db' ? 'Prije svakog spremanja prethodna se verzija pohrani. ' : 'Još se koriste izvorna pisma iz projekta, a prva izmjena prebacuje ih u bazu. '),
+    S.source === 'db' ? h('button', { class: 'link', onclick: async function (e) { e.target.disabled = true; var x = await api('restoreLetters', {}); clear(page); viewLetters(page, note(x.ok ? 'Vraćena je prethodna verzija pisama.' : (x.j.message || 'Nije uspjelo.'), x.ok ? 'ok' : 'err')); } }, 'Vrati prethodnu verziju') : null));
+}
+
+/* ---------- uređivač pisma ---------- */
+function optionsEditor(obj, onchange) {
+  var box = h('div');
+  function draw() {
+    clear(box); var name = 'ok' + Math.random().toString(36).slice(2, 8);
+    obj.opts.forEach(function (o, i) {
+      box.appendChild(h('div', { class: 'opt' },
+        h('input', { type: 'radio', name: name, checked: obj.a === i, 'aria-label': 'Točan odgovor ' + (i + 1), onchange: function () { obj.a = i; onchange(); } }),
+        h('input', { type: 'text', value: o, maxlength: 160, placeholder: 'Odgovor ' + (i + 1), 'aria-label': 'Odgovor ' + (i + 1), oninput: function (e) { obj.opts[i] = e.target.value; onchange(); } }),
+        obj.opts.length > 2 ? h('button', { class: 'btn x', type: 'button', 'aria-label': 'Ukloni odgovor ' + (i + 1), onclick: function () { obj.opts.splice(i, 1); if (obj.a >= obj.opts.length) obj.a = 0; else if (obj.a > i) obj.a--; draw(); onchange(); } }, '×') : h('span')));
+    });
+    box.appendChild(h('div', { class: 'small mute' }, 'Označi krugom točan odgovor. ', obj.opts.length < 4 ? h('button', { class: 'link', type: 'button', onclick: function () { obj.opts.push(''); draw(); onchange(); } }, 'Dodaj odgovor') : null));
+  }
+  draw(); return box;
+}
+
+function viewEditor(page) {
+  var ED = S.edit, d = ED.data, isNew = ED.idx < 0, idx = isNew ? S.letters.length : ED.idx, isNum = !!d.num;
+  if (isNum && d.num.real == null) d.num.real = '';
+  var out = h('div', { 'aria-live': 'polite' }), dirtyEl = h('span', { class: 'small st-warn' }), pv = h('div', { class: 'pv' });
+  var changed = function () { DIRTY = true; dirtyEl.textContent = 'Nespremljene izmjene'; upd(); };
+
+  function upd() {
+    clear(pv); pv.appendChild(h('h2', {}, 'Pregled'));
+    var s = h('div', { class: 'stamp', style: 'background:' + COLORS[d.cat] }, h('span', { style: 'font-size:' + (String(d.fig || '').length > 4 ? 15 : 24) + 'px' }, d.fig || '?')); if (d.figu) s.appendChild(h('small', {}, d.figu));
+    var paper = h('div', { class: 'paper' }, s, h('b', {}, d.title || 'Naslov'), h('div', {}, d.story || 'Priča…')); if (d.note) paper.appendChild(h('div', { class: 'hand' }, d.note));
+    pv.appendChild(paper);
+    pv.appendChild(h('div', { class: 'q' }, '1. ' + (d.q || 'Pitanje')));
+    if (isNum && d.num) pv.appendChild(h('div', { class: 'mute' }, 'Klizač ' + d.num.min + ' do ' + d.num.max + (d.num.unit || '') + '. Točno: ' + d.num.a + ' (±' + d.num.tol + ')'));
+    else pv.appendChild(h('ol', {}, (d.opts || []).map(function (o, i) { return h('li', { class: i === d.a ? 'ok' : '' }, (o || '…') + (i === d.a ? '  (točno)' : '')); })));
+    d.quiz.forEach(function (q, n) { pv.appendChild(h('div', { class: 'q' }, (n + 2) + '. ' + (q.q || 'Pitanje'))); pv.appendChild(h('ol', {}, q.opts.map(function (o, i) { return h('li', { class: i === q.a ? 'ok' : '' }, (o || '…') + (i === q.a ? '  (točno)' : '')); }))); });
+  }
+
+  var qBlock = h('div'), drawQ = function () {
+    clear(qBlock);
+    if (!isNum) { qBlock.appendChild(h('label', {}, 'Odgovori')); qBlock.appendChild(optionsEditor(d, changed)); return; }
+    var n = d.num, f = function (k, lab, type) { return h('div', {}, h('label', {}, lab), h('input', { type: type || 'number', step: 'any', value: n[k] == null ? '' : n[k], oninput: function (e) { n[k] = type === 'text' ? e.target.value : (e.target.value === '' ? null : parseFloat(e.target.value)); changed(); } })); };
+    qBlock.appendChild(h('p', { class: 'mute small', style: 'margin-top:10px' }, 'Igrač pomiče klizač. Odgovor je točan ako je unutar tolerancije.'));
+    qBlock.appendChild(h('div', { class: 'three' }, f('min', 'Najmanje'), f('max', 'Najviše'), f('step', 'Korak')));
+    qBlock.appendChild(h('div', { class: 'three' }, f('a', 'Točan odgovor'), f('tol', 'Tolerancija (±)'), f('unit', 'Jedinica uz broj (npr. " km")', 'text')));
+    qBlock.appendChild(h('div', { class: 'two' }, f('du', 'Jedinica u poruci o pogrešci', 'text'), f('real', 'Točan odgovor kao tekst (neobavezno)', 'text')));
+  };
+  var bind = function (k, extra) { return Object.assign({ value: d[k] == null ? '' : d[k], oninput: function (e) { d[k] = e.target.value; changed(); } }, extra || {}); };
+  var typeSel = h('select', { 'aria-label': 'Vrsta prvog pitanja', onchange: function (e) { isNum = e.target.value === 'num'; if (isNum) d.num = d.num || { min: 0, max: 100, step: 1, a: 50, tol: 5, unit: '', du: '', real: '' }; else { delete d.num; d.opts = d.opts && d.opts.length >= 2 ? d.opts : ['', '']; d.a = d.a || 0; } drawQ(); changed(); } },
+    h('option', { value: 'choice', selected: !isNum }, 'Odabir odgovora'), h('option', { value: 'num', selected: isNum }, 'Procjena broja (klizač)'));
+  var quizBlock = function (i) { var q = d.quiz[i]; return h('div', { class: 'group' }, h('h3', {}, 'Pitanje za provjeru ' + (i + 1)), h('label', {}, 'Pitanje'), h('input', { type: 'text', maxlength: 300, value: q.q, oninput: function (e) { q.q = e.target.value; changed(); } }), h('label', {}, 'Odgovori'), optionsEditor(q, changed)); };
+  drawQ();
+  var when = dateOf(S.start, idx), t0 = today0();
+
+  var save = async function (e) {
+    if (e && e.preventDefault) e.preventDefault(); clear(out);
+    var copyD = JSON.parse(JSON.stringify(d));
+    if (isNum) { ['min', 'max', 'step', 'a', 'tol'].forEach(function (k) { copyD.num[k] = parseFloat(copyD.num[k]); }); delete copyD.opts; delete copyD.a; copyD.num.a = parseFloat(d.num.a); if (!copyD.num.real) delete copyD.num.real; } else delete copyD.num;
+    if (!copyD.note) delete copyD.note;
+    var list = S.letters.slice(); if (isNew) list.push(copyD); else list[ED.idx] = copyD;
+    var btn = document.getElementById('savebtn'); if (btn) btn.disabled = true;
+    var r = await api('saveLetters', { letters: list });
+    if (btn) btn.disabled = false;
+    if (!r.ok) { out.appendChild(note(r.j.message || 'Spremanje nije uspjelo.', 'err')); return; }
+    DIRTY = false; S.edit = null; render();
+    var pg = document.getElementById('page'); if (pg) { clear(pg); viewLetters(pg, note('Spremljeno. Igra ga prikazuje unutar minute.')); }
+  };
+  var cancel = function () { if (DIRTY && !confirm('Odbaciti izmjene?')) return; DIRTY = false; S.edit = null; render(); };
+  page.appendChild(h('div', { style: 'margin-bottom:12px' }, h('button', { class: 'link', onclick: cancel }, '‹ Sva pisma'), h('h1', { style: 'margin-top:6px' }, (isNew ? 'Novo pismo' : 'Pismo') + ' № ' + pad(idx + 1)),
+    h('div', { class: 'mute' }, isNew ? 'Otključava se ' + dm(when) + (when <= t0 ? ' (taj je datum prošao, pa je dostupno odmah)' : '') : (when <= t0 ? 'Objavljeno ' + dm(when) + '. Izmjene vide svi pri sljedećem osvježavanju.' : 'Otključava se ' + dm(when)))));
+  page.appendChild(h('form', { onsubmit: save },
+    h('div', { class: 'edit' },
+      h('div', {},
+        h('div', { class: 'group' }, h('h3', {}, 'Pismo'),
+          h('div', { class: 'two' }, h('div', {}, h('label', {}, 'Kategorija'), h('select', { onchange: function (e) { d.cat = e.target.value; changed(); } }, Object.keys(CATS).map(function (k) { return h('option', { value: k, selected: d.cat === k }, CATS[k]); }))), h('div', {}, h('label', {}, 'Naslov'), h('input', Object.assign({ type: 'text', maxlength: 80, required: true }, bind('title'))))),
+          h('div', { class: 'two' }, h('div', {}, h('label', {}, 'Broj na marki'), h('input', Object.assign({ type: 'text', maxlength: 10, required: true, placeholder: '38' }, bind('fig')))), h('div', {}, h('label', {}, 'Jedinica'), h('input', Object.assign({ type: 'text', maxlength: 12, placeholder: 'minuta' }, bind('figu'))))),
+          h('label', {}, 'Priča'), h('textarea', Object.assign({ maxlength: 2000, required: true, placeholder: 'Kratka priča, 60 do 100 riječi: prizor, obrat, nešto što se pamti.' }, bind('story'))),
+          h('label', {}, 'Tvoja poruka rukopisom (neobavezno)'), h('input', Object.assign({ type: 'text', maxlength: 200 }, bind('note')))),
+        h('div', { class: 'group' }, h('h3', {}, 'Pitanje 1 (prije priče, kao mamac)'), h('label', {}, 'Vrsta'), typeSel, h('label', {}, 'Pitanje'), h('input', Object.assign({ type: 'text', maxlength: 300, required: true }, bind('q'))), qBlock),
+        quizBlock(0), quizBlock(1)),
+      pv),
+    h('div', { class: 'actions' }, h('button', { class: 'btn primary', type: 'submit', id: 'savebtn' }, isNew ? 'Dodaj pismo' : 'Spremi'), h('button', { class: 'btn', type: 'button', onclick: cancel }, 'Odustani'), h('div', { class: 'grow' }, out), dirtyEl)));
+  upd();
+  document.onkeydown = function (e) { if ((e.metaKey || e.ctrlKey) && e.key === 's' && S.edit) { e.preventDefault(); save(); } };
+}
+
+/* ---------- igrači ---------- */
+async function viewPlayers(page) {
+  loading(page);
+  var r = await api('players'); if (!r.ok) { clear(page).appendChild(note('Ne mogu učitati igrače.', 'err')); return; }
+  S.players = r.j.players; clear(page);
+  var name = h('input', { type: 'text', maxlength: 30, placeholder: 'Oznaka, npr. Ona', 'aria-label': 'Oznaka novog igrača' }), made = h('div');
+  var showLinks = function (j) {
+    var base = location.origin + '/', a = base + '#sync=' + j.code, b = base + '#watch=' + j.watch;
+    clear(made).appendChild(h('div', { class: 'msg ok' }, h('strong', {}, 'Link za nju'), h('p', { class: 'mute small' }, 'Kad ga otvori na svom mobitelu, uređaj se poveže. Vrijedi samo za nju, ne dijeli ga dalje.'), h('code', {}, a), h('p', { style: 'margin:6px 0 10px' }, h('button', { class: 'link', onclick: function (e) { copy(e.target, a); } }, 'Kopiraj')),
+      h('strong', {}, 'Tvoj link za praćenje (samo pregled)'), h('code', { style: 'margin-top:4px' }, b), h('p', { style: 'margin:6px 0 0' }, h('button', { class: 'link', onclick: function (e) { copy(e.target, b); } }, 'Kopiraj'))));
+  };
+  var tb = h('tbody'), draw = function () {
+    clear(tb);
+    if (!S.players.length) { tb.appendChild(h('tr', {}, h('td', { colspan: 7, class: 'mute' }, 'Još nema igrača. Napravi link iznad, ili neka u igri uključi Sinkronizaciju.'))); return; }
+    S.players.forEach(function (p) {
+      var del = h('button', { class: 'link danger' }, 'Obriši'), armed = false;
+      del.onclick = async function (e) { e.stopPropagation(); if (!armed) { armed = true; del.textContent = 'Sigurno?'; setTimeout(function () { armed = false; del.textContent = 'Obriši'; }, 4000); return; } await api('deletePlayer', { id: p.id }); var x = await api('players'); if (x.ok) { S.players = x.j.players; draw(); } };
+      tb.appendChild(h('tr', { class: 'click', onclick: function () { S.pid = p.id; render(); } }, h('td', {}, p.label || h('span', { class: 'mute' }, 'Bez oznake')), h('td', {}, rel(p.seen)), h('td', { class: 'hide-s' }, (p.rank || '-') + ' · ' + p.points), h('td', { class: 'r' }, p.n + ' / ' + p.total), h('td', { class: 'r hide-s' }, p.streak), h('td', { class: 'r hide-s' }, p.perfect), h('td', { class: 'r' }, del)));
+    });
+  };
+  page.appendChild(h('h2', {}, 'Novi igrač'));
+  page.appendChild(h('div', { class: 'tools' }, name, h('button', { class: 'btn primary', onclick: async function (e) { e.target.disabled = true; var x = await api('createPlayer', { label: name.value }); e.target.disabled = false; if (!x.ok) { clear(made).appendChild(note('Nije uspjelo.', 'err')); return; } showLinks(x.j); var y = await api('players'); if (y.ok) { S.players = y.j.players; draw(); } } }, 'Napravi link')));
+  page.appendChild(made);
+  page.appendChild(h('h2', {}, 'Igrači'));
+  page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Oznaka'), h('th', {}, 'Zadnji put'), h('th', { class: 'hide-s' }, 'Čin · bodovi'), h('th', { class: 'r' }, 'Pisama'), h('th', { class: 'r hide-s' }, 'Niz'), h('th', { class: 'r hide-s' }, 'Čisti žigovi'), h('th', {}, ''))), tb));
+  draw();
+  S.timer = setInterval(async function () { var x = await api('players'); if (x.ok && !S.pid && S.tab === 'players') { S.players = x.j.players; draw(); } }, 30000);
+}
+async function viewPlayer(page) {
+  loading(page);
+  var r = await api('player', undefined, '&id=' + encodeURIComponent(S.pid)); clear(page);
+  var back = h('button', { class: 'link', onclick: function () { S.pid = null; render(); } }, '‹ Svi igrači');
+  if (!r.ok) { page.appendChild(back); page.appendChild(note('Igrač nije pronađen.', 'err')); return; }
+  var p = r.j, lab = h('input', { type: 'text', maxlength: 30, value: p.label, placeholder: 'Oznaka', 'aria-label': 'Oznaka igrača', style: 'max-width:220px' }), saved = h('span', { class: 'small mute' });
+  page.appendChild(back);
+  page.appendChild(h('h1', { style: 'margin-top:6px' }, p.label || 'Igrač'));
+  page.appendChild(h('p', { class: 'mute' }, 'Zadnji put ' + rel(p.seen) + '. Povezan ' + (p.created ? dm(new Date(p.created)) : 'nepoznato') + '.'));
+  page.appendChild(h('div', { class: 'tools' }, lab, h('button', { class: 'btn', onclick: async function () { var x = await api('labelPlayer', { id: p.id, label: lab.value }); saved.textContent = x.ok ? 'Spremljeno' : 'Greška'; } }, 'Spremi oznaku'), saved));
+  page.appendChild(h('div', { class: 'facts' }, h('div', {}, h('b', {}, p.rank || '-'), h('span', {}, p.points + ' ' + plural(p.points, 'bod', 'boda', 'bodova'))), h('div', {}, h('b', {}, p.n + ' / ' + p.total), h('span', {}, 'pisama')), h('div', {}, h('b', {}, p.streak), h('span', {}, 'dana zaredom')), h('div', {}, h('b', {}, p.perfect), h('span', {}, 'čistih žigova')), h('div', {}, h('b', {}, p.learned), h('span', {}, 'zapamćeno')), h('div', {}, h('b', {}, p.weeks), h('span', {}, 'nedjeljnih'))));
+  page.appendChild(h('h2', {}, 'Odigrana pisma'));
+  if (!p.letters.length) { page.appendChild(h('p', { class: 'mute' }, 'Još nije odigrala nijedno pismo.')); return; }
+  page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, '№'), h('th', {}, 'Naslov'), h('th', { class: 'hide-s' }, 'Datum'), h('th', { class: 'r' }, 'Rezultat'))),
+    h('tbody', {}, p.letters.slice().reverse().map(function (l) { return h('tr', {}, h('td', { class: 'no' }, pad(l.i + 1)), h('td', {}, l.title), h('td', { class: 'hide-s' }, l.d ? dm(new Date(l.d)) : ''), h('td', { class: 'r ' + (l.score === 3 ? 'st-ok' : '') }, l.score + '/3' + (l.learned ? ' · zapamćeno' : ''))); }))));
+}
+
+/* ---------- obavijesti ---------- */
+async function viewNotify(page) {
+  loading(page);
+  var r = await api('status'); clear(page);
+  if (!r.ok) { page.appendChild(note('Ne mogu učitati stanje.', 'err')); return; }
+  var s = r.j, ch = s.channels, any = ch.ntfy || ch.telegram || ch.email, topic = stableTopic(), out = h('div', { 'aria-live': 'polite' });
+  var row = function (n, on, vars) { return h('tr', {}, h('td', {}, n), h('td', { class: on ? 'st-ok' : 'st-off' }, on ? 'postavljeno' : 'nije postavljeno'), h('td', { class: 'mute hide-s' }, vars)); };
+  page.appendChild(h('h2', {}, 'Stanje'));
+  page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Dio'), h('th', {}, 'Stanje'), h('th', { class: 'hide-s' }, 'Varijable'))),
+    h('tbody', {}, h('tr', {}, h('td', {}, 'Baza'), h('td', { class: s.storage ? 'st-ok' : 'st-bad' }, s.storage ? 'radi' : 'nije povezana'), h('td', { class: 'mute hide-s' }, 'KV_REST_API_URL, KV_REST_API_TOKEN')),
+      row('ntfy', ch.ntfy, 'NTFY_TOPIC'), row('Telegram', ch.telegram, 'TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID'), row('E-pošta (Resend)', ch.email, 'RESEND_API_KEY, NOTIFY_EMAIL'))));
+  page.appendChild(h('p', { class: 'mute small', style: 'margin-top:10px' }, 'Obavijest stiže kad povezani igrač uđe u igru (najviše jednom u 30 minuta), odigra pismo ili nedjeljnu razglednicu. Uređaji koji nisu povezani sinkronizacijom ne mogu se pratiti.'));
+  page.appendChild(h('div', { class: 'tools' }, h('button', { class: 'btn primary', disabled: !any, onclick: async function (e) { e.target.disabled = true; var x = await api('testNotify', {}); e.target.disabled = !any; clear(out).appendChild(x.ok && x.j.sent.length ? note('Poslano preko: ' + x.j.sent.join(', ') + '. Provjeri mobitel.') : note('Nijedan kanal nije uspio poslati. Provjeri postavke.', 'err')); } }, 'Pošalji probnu obavijest')));
+  page.appendChild(out);
+  page.appendChild(h('h2', {}, 'Postavljanje: ntfy (bez računa)'));
+  page.appendChild(h('ol', { class: 'steps' }, h('li', {}, 'Instaliraj aplikaciju ', h('strong', {}, 'ntfy'), ' (App Store ili Google Play) i pretplati se na ovaj tajni naziv teme:', h('code', { style: 'margin-top:6px' }, topic), h('button', { class: 'link small', onclick: function (e) { copy(e.target, topic); } }, 'Kopiraj naziv')),
+    h('li', {}, 'U Vercelu dodaj tajnu varijablu ', h('strong', {}, 'NTFY_TOPIC'), ' s istim nazivom (Settings, Environment Variables), pa ponovo objavi projekt.'),
+    h('li', {}, 'Vrati se ovamo i pošalji probnu obavijest.')));
+  page.appendChild(h('p', { class: 'mute small' }, 'Tko zna naziv teme, može čitati obavijesti, pa neka ostane tajan. Obavijesti sadrže samo ono što je odigrala, npr. „Ona: № 04 „Naslov” 2/3”.'));
+  page.appendChild(h('details', {}, h('summary', {}, 'Telegram ili e-pošta umjesto ntfy'), h('p', { class: 'mute small', style: 'margin-top:8px' }, 'Telegram: napravi bota kod @BotFather, pa postavi TELEGRAM_BOT_TOKEN i TELEGRAM_CHAT_ID. E-pošta (Resend): postavi RESEND_API_KEY i NOTIFY_EMAIL. Nakon svake nove varijable treba nova objava.')));
+}
+
+/* ---------- start ---------- */
+async function start() {
+  if (!TOKEN) return renderLogin();
+  var r; try { r = await api('status'); } catch (e) { return; }
+  if (!r.ok) return renderLogin();
+  render();
+}
+start();
+</script>
+</body>
+</html>

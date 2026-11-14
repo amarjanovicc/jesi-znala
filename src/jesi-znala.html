@@ -1,0 +1,913 @@
+<title>Jesi znala?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Caveat:wght@500;700&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* Jedan svijet, namjerno samo svijetao: radni stol s uzorkom iz unutrašnjosti omotnice, a na njemu stvarni predmeti:
+   omotnica, pismo otipkano na stroju, dopisnica za odgovor i crni album za marke. Tri tinte: strojna, kemijska i crvena. */
+:root {
+  --desk: #CBD9E5; --desk-line: rgba(39,67,160,.10);
+  --ink: #1C2A44; --soft: #566179; --pen: #2743A0; --red: #C8322F; --green: #2E7D4F;
+  --env: #F8F5EE; --letter: #EFE3C6; --card: #FBF9F3; --rule: rgba(28,42,68,.22);
+  --book: #22252B; --book-ink: #EDE7D8; --book-soft: #96928A; --strip: rgba(255,255,255,.07);
+  --pov: #A3402E; --geo: #17766A; --inf: #4B3FB0; --stamp: #FCFBF6;
+  --lift: 0 1px 2px rgba(28,42,68,.16), 0 10px 24px rgba(28,42,68,.16);
+  --type: "Courier Prime", "Courier New", Courier, monospace;
+  --hand: "Caveat", "Bradley Hand", cursive;
+  --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --out: cubic-bezier(.22,1,.36,1);
+  color-scheme: light;
+}
+* { box-sizing: border-box }
+html, body { height: 100% }
+body { color: var(--ink); font: 16px/1.55 var(--type); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  background: repeating-linear-gradient(45deg, var(--desk-line) 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, var(--desk-line) 0 1px, transparent 1px 6px), var(--desk);
+  padding-block: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.app { max-width: 470px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; touch-action: manipulation; text-align: inherit }
+a { color: inherit }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--pen); outline-offset: 3px }
+h1, h2, h3, p, ul { margin: 0; padding: 0 }
+.pov { --cat: var(--pov) } .geo { --cat: var(--geo) } .inf { --cat: var(--inf) }
+
+.view { flex: 1; display: flex; flex-direction: column; gap: 20px; padding-block: 18px 30px }
+.view.anim > *, .pop { animation: rise .45s var(--out) both; animation-delay: calc(var(--i, 0) * 60ms) }
+@keyframes rise { from { opacity: 0; transform: translateY(10px) } }
+
+/* rukopis i tipkani tekst */
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 4px 2px 0 }
+.title { font: 700 44px/0.9 var(--hand); color: var(--pen); transform: rotate(-3deg); transform-origin: left bottom }
+.hand-s { font: 500 23px/1 var(--hand); color: var(--red); transform: rotate(2deg) }
+.say { font-size: 15px; line-height: 1.5; color: var(--soft); text-wrap: pretty }
+.back { font: 500 24px/1 var(--hand); color: var(--pen); min-height: 44px; align-self: flex-start; padding-right: 10px }
+
+/* gumbi */
+.btn { background: var(--ink); color: var(--env); font: 700 15px/1 var(--type); letter-spacing: .14em; text-transform: uppercase; border-radius: 2px; min-height: 54px; padding: 0 18px;
+  display: flex; align-items: center; justify-content: center; text-align: center; text-decoration: none; transition: transform .12s ease-out, opacity .2s ease }
+.btn:active:not(:disabled) { transform: scale(.97) }
+.btn:disabled { opacity: .3; cursor: default }
+.btn.alt { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink) }
+.dock { position: sticky; bottom: 0; margin-top: auto; display: flex; gap: 10px; padding-block: 16px calc(14px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--desk) 34%) }
+.dock .btn { flex: 1 }
+@media (hover: hover) { .btn:hover:not(:disabled) { opacity: .86 } }
+
+/* omotnica */
+.env { position: relative; width: 100%; min-height: 236px; padding: 14px 16px 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; border: 8px solid transparent; border-radius: 3px; box-shadow: var(--lift);
+  background: linear-gradient(var(--env), var(--env)) padding-box, repeating-linear-gradient(-45deg, var(--red) 0 12px, transparent 12px 24px, var(--pen) 24px 36px, transparent 36px 48px) border-box, linear-gradient(var(--env), var(--env)) border-box;
+  transform: rotate(-1deg); transition: transform .25s var(--out) }
+button.env:active { transform: rotate(-1deg) scale(.985) }
+@media (hover: hover) { button.env:hover { transform: rotate(0deg) translateY(-3px) } }
+.env-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px }
+.avion { border: 1.5px solid var(--pen); color: var(--pen); font: 700 12px/1.25 var(--cond); letter-spacing: .16em; text-transform: uppercase; padding: 5px 9px 4px }
+.env-stamp { position: relative; display: block; transform: rotate(2deg) }
+.addr { display: block; font: 500 25px/1.2 var(--hand); color: var(--pen) }
+.addr > span { display: block; border-bottom: 1px solid var(--rule); padding: 5px 2px 3px; text-wrap: balance }
+.count { font: 700 19px/1 var(--type); color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: 0 }
+
+/* marka */
+.stamp-wrap { --u: 9px; position: relative; display: block; flex: none; width: calc(var(--u) * 14); height: calc(var(--u) * 18); filter: drop-shadow(0 1px 1px rgba(10,20,40,.22)) drop-shadow(0 5px 8px rgba(10,20,40,.14)) }
+.stamp-wrap.sm { --u: 6px } .stamp-wrap.lg { --u: 11px }
+.stamp { position: absolute; inset: 0; background: var(--stamp); padding: calc(var(--u) * 1.15);
+  -webkit-mask: radial-gradient(circle calc(var(--u) * .3) at 50% 50%, #0000 96%, #000) calc(var(--u) / -2) calc(var(--u) / -2) / var(--u) var(--u), linear-gradient(#000 0 0) center / calc(100% - var(--u)) calc(100% - var(--u)) no-repeat;
+  mask: radial-gradient(circle calc(var(--u) * .3) at 50% 50%, #0000 96%, #000) calc(var(--u) / -2) calc(var(--u) / -2) / var(--u) var(--u), linear-gradient(#000 0 0) center / calc(100% - var(--u)) calc(100% - var(--u)) no-repeat }
+.field { height: 100%; background: var(--cat); color: var(--stamp); position: relative; display: flex; flex-direction: column; justify-content: space-between; align-items: stretch; overflow: hidden;
+  padding: calc(var(--u) * .75); outline: 1px solid var(--stamp); outline-offset: calc(var(--u) * -.4); font-family: var(--cond); text-transform: uppercase; line-height: 1; text-align: left }
+.field svg { position: absolute; left: 12%; top: 16%; width: 76%; aspect-ratio: 1; opacity: .2 }
+.st-s { font-weight: 600; font-size: calc(var(--u) * .95); letter-spacing: .14em; position: relative; display: flex; justify-content: space-between }
+.st-fig { position: relative; text-align: center; font-weight: 700; font-size: calc(var(--u) * 3.3); letter-spacing: -.01em; font-variant-numeric: tabular-nums }
+.st-fig.f2 { font-size: calc(var(--u) * 5.2) } .st-fig.f3 { font-size: calc(var(--u) * 4.2) }
+.st-fig small { display: block; font-weight: 600; font-size: calc(var(--u) * 1.05); letter-spacing: .14em; margin-top: calc(var(--u) * .25) }
+.sm .st-s { font-size: 0; height: calc(var(--u) * .4) } .sm .st-fig small { letter-spacing: .06em; font-size: calc(var(--u) * 1.25) }
+.pm { position: absolute; color: var(--ink); opacity: .82; mix-blend-mode: multiply; pointer-events: none; font-family: var(--type) }
+.pm.thump { animation: thump .34s cubic-bezier(.2,.9,.3,1.25) .5s both }
+@keyframes thump { from { opacity: 0; transform: rotate(-9deg) scale(1.6) } }
+.env-stamp .pm { width: 128px; right: 52px; top: 22px; transform: rotate(-6deg) }
+
+/* dopisnica za ponavljanje */
+.slip { background: var(--card); box-shadow: var(--lift); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; transform: rotate(.6deg); border-left: 5px solid var(--red); font-size: 15px; line-height: 1.4; width: 100% }
+.slip b { font: 700 13px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase; color: var(--red); display: block; margin-bottom: 4px }
+.slip.week { border-left-color: var(--pen); transform: rotate(-.6deg) } .slip.week b { color: var(--pen) }
+.slip u { font: 700 24px/1 var(--hand); color: var(--pen); text-decoration: none; white-space: nowrap }
+
+/* album: crna stranica s trakama, kao u pravom albumu za marke */
+.book { background: var(--book); color: var(--book-ink); border-radius: 4px; padding: 18px 14px 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--lift) }
+.book-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px }
+.book-h h2 { font: 700 32px/1 var(--hand) }
+.book-h span { font-size: 14px; color: var(--book-soft); font-variant-numeric: tabular-nums }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, 84px); justify-content: space-between; gap: 30px 8px; padding: 0 4px;
+  background: repeating-linear-gradient(var(--strip) 0 0) ; background: repeating-linear-gradient(transparent 0 58px, var(--strip) 58px 116px, transparent 116px 138px) }
+.cell { width: 84px; height: 108px; position: relative; display: block }
+.cell .sc { position: absolute; left: 0; right: 0; bottom: -21px; text-align: center; font-size: 12px; color: var(--book-soft); line-height: 1 }
+.cell .sc.full { color: var(--book-ink) }
+button.cell { transition: transform .15s ease-out }
+button.cell:active { transform: scale(.95) }
+@media (hover: hover) { button.cell:hover { transform: translateY(-3px) rotate(-1.5deg) } }
+.empty { border: 1.5px dashed rgba(237,231,216,.28); border-radius: 2px; display: grid; place-items: center; color: rgba(237,231,216,.4); font: 700 22px/1 var(--cond); font-variant-numeric: tabular-nums }
+.empty.wait { border-color: var(--book-ink); color: var(--book-ink) }
+.empty.wait small { display: block; font: 400 11px/1 var(--type); margin-top: 6px; text-align: center }
+.goal { font-size: 14px; line-height: 1.45; color: var(--book-soft); border-top: 1px solid rgba(237,231,216,.16); padding-top: 14px }
+.goal b { color: var(--book-ink); font-weight: 700 }
+.ver { width: 100%; text-align: center; font-size: 12px; color: var(--soft); padding-top: 6px }
+.foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 18px; font-size: 13px; color: var(--soft) }
+.foot button { text-decoration: underline; text-underline-offset: 3px; min-height: 44px }
+
+/* pismo */
+.sheet { position: relative; color: #2A2118; padding: 20px 22px 30px; border-radius: 1px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--lift); font-size: 16px; line-height: 1.62; text-shadow: 0 0 .7px rgba(42,33,24,.6); transform: rotate(-.4deg);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .23 0 0 0 0 .06 0 0 0 .6 -.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 82% 88%, transparent 0 25px, rgba(120,70,20,.13) 26px 29px, transparent 30px),
+    linear-gradient(rgba(255,255,255,.4), rgba(255,255,255,.4)) 0 calc(33.3% - 1px) / 100% 1px no-repeat, linear-gradient(rgba(70,45,10,.16), rgba(70,45,10,.16)) 0 33.3% / 100% 1px no-repeat,
+    linear-gradient(rgba(255,255,255,.4), rgba(255,255,255,.4)) 0 calc(66.6% - 1px) / 100% 1px no-repeat, linear-gradient(rgba(70,45,10,.16), rgba(70,45,10,.16)) 0 66.6% / 100% 1px no-repeat,
+    linear-gradient(90deg, rgba(70,45,10,.1), transparent 3%, transparent 97%, rgba(70,45,10,.1)),
+    radial-gradient(120% 90% at 50% 40%, transparent 48%, rgba(120,80,20,.26)), var(--letter) }
+.sheet-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.4; padding-bottom: 6px }
+.sheet .date { text-align: right }
+.rcv { border: 1.5px solid #6B4FA0; outline: 1.5px solid #6B4FA0; outline-offset: 2px; color: #6B4FA0; font: 700 12px/1.3 var(--cond); letter-spacing: .14em; text-transform: uppercase; padding: 5px 9px 3px; margin: 5px 0 0 3px; transform: rotate(-7deg); opacity: .7; text-align: center; text-shadow: none }
+.sheet h2 { font: 700 17px/1.35 var(--type); text-decoration: underline; text-underline-offset: 4px; text-transform: uppercase; letter-spacing: .04em; text-wrap: balance }
+.sheet p { text-wrap: pretty }
+.hand { font: 700 38px/1 var(--hand); color: var(--pen); transform: rotate(-2deg); align-self: flex-start }
+.hand.sm { font-weight: 500; font-size: 24px; line-height: 1.2; margin-top: 6px }
+.view.anim > .sheet.unfold { animation: unfold .7s var(--out) both; transform-origin: top center }
+@keyframes unfold { from { opacity: 0; transform: perspective(900px) rotateX(-50deg) translateY(-10px) } }
+
+/* dopisnica za odgovor */
+.card { background: var(--card); box-shadow: var(--lift); padding: 16px 16px 8px; border-radius: 2px; display: flex; flex-direction: column; gap: 14px }
+.card-h { display: flex; justify-content: space-between; gap: 10px; font: 700 13px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase; color: var(--cat, var(--soft)); border-bottom: 1.5px solid var(--ink); padding-bottom: 9px; font-variant-numeric: tabular-nums }
+.q { font: 700 19px/1.35 var(--type); text-wrap: balance }
+.opts { display: flex; flex-direction: column }
+.opt { display: grid; grid-template-columns: 22px 1fr; gap: 13px; align-items: start; padding: 13px 4px; min-height: 52px; border-top: 1px dashed var(--rule); font-size: 16.5px; line-height: 1.35; width: 100%; transition: opacity .25s ease }
+.opt:disabled { cursor: default }
+.box { width: 20px; height: 20px; border: 1.5px solid var(--ink); margin-top: 1px; position: relative; display: block }
+.box svg { position: absolute; left: -2px; top: -11px; width: 30px; height: 30px; fill: none; stroke: var(--pen); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 42; stroke-dashoffset: 42 }
+.opt.picked .box svg { animation: draw .28s ease-out forwards }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+.txt { position: relative; justify-self: start }
+.opt.wrong .txt::after { content: ""; position: absolute; left: -5px; right: -5px; top: 50%; height: 2.5px; background: var(--red); border-radius: 2px; transform: rotate(-1deg); transform-origin: left; animation: strike .3s .25s ease-out both }
+@keyframes strike { from { transform: rotate(-1deg) scaleX(0) } }
+.opt.right .txt::before { content: ""; position: absolute; inset: -6px -12px; border: 2.5px solid var(--green); border-radius: 50% / 60%; transform: rotate(-1.5deg); animation: ring .35s .3s var(--out) both }
+@keyframes ring { from { opacity: 0; transform: rotate(-1.5deg) scale(1.18) } }
+.opt.dim { opacity: .4 }
+.marg { font: 700 30px/1 var(--hand); transform: rotate(-2deg); align-self: flex-start; padding: 2px 4px 10px; scroll-margin: 20px }
+.marg.y { color: var(--green) } .marg.n { color: var(--red) }
+.num { display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px }
+.num output { font: 700 52px/1.1 var(--type); text-align: center; font-variant-numeric: tabular-nums }
+.num input { width: 100%; accent-color: var(--pen); height: 44px; margin: 0 }
+.ends { display: flex; justify-content: space-between; font-size: 13px; color: var(--soft) }
+.scale { position: relative; height: 96px; margin: 0 26px 6px }
+.scale::before { content: ""; position: absolute; left: -26px; right: -26px; top: 47px; height: 1.5px; background: var(--ink) }
+.pin { position: absolute; top: 0; height: 96px; width: 0; display: flex; flex-direction: column; align-items: center; font: 700 22px/1 var(--hand); white-space: nowrap }
+.pin::before { content: ""; position: absolute; top: 41px; width: 13px; height: 13px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px var(--card) }
+.pin.you { --c: var(--pen); color: var(--pen); justify-content: flex-start }
+.pin.real { --c: var(--green); color: var(--green); justify-content: flex-end; animation: rise .5s var(--out) .15s both }
+.rv { display: flex; align-items: center; gap: 14px; font-size: 15px; color: var(--soft); line-height: 1.4 }
+
+/* rezultat */
+.frank { position: relative; background: var(--env); box-shadow: var(--lift); padding: 20px 20px 22px; display: flex; justify-content: flex-end; border-radius: 2px; min-height: 240px; transform: rotate(.8deg) }
+.frank .stamp-wrap { transform: rotate(2deg) }
+.frank.fresh .stamp-wrap { animation: land .6s var(--out) both }
+@keyframes land { from { opacity: 0; transform: translateY(-26px) rotate(9deg) scale(1.08) } }
+.frank .pm { width: 205px; left: 14px; top: 56px; transform: rotate(-7deg) }
+.frank .big { position: absolute; left: 20px; bottom: 16px; font: 700 34px/1 var(--hand); color: var(--pen); transform: rotate(-3deg) }
+/* putovnica: kartica napretka (čin, bodovi, vize) */
+.pass { box-shadow: var(--lift); border-radius: 3px 9px 9px 3px; overflow: hidden; transform: rotate(.4deg); background: var(--card) }
+.pass-cover { display: flex; align-items: center; gap: 14px; padding: 12px 16px; color: #E6CB86; border-bottom: 2px solid #0F1D3B;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 2px, transparent 2px 5px), #1B2F5C }
+.pass-emblem { width: 40px; height: 40px; flex: none }
+.pass-t { font: 700 24px/1 var(--cond); letter-spacing: .24em; text-transform: uppercase }
+.pass-s { font: 500 11px/1 var(--cond); letter-spacing: .2em; text-transform: uppercase; opacity: .8; margin-top: 5px }
+.pass-n { margin-left: auto; text-align: right; font: 700 12px/1.3 var(--cond); letter-spacing: .14em; text-transform: uppercase }
+.pass-page { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 10px; background: radial-gradient(120% 120% at 100% 0, rgba(39,67,160,.07), transparent 60%), var(--card) }
+.pass-grid { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: end }
+.pass-grid small { display: block; font: 700 11px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase; color: var(--soft); margin-bottom: 4px }
+.rk-name { font: 700 34px/1 var(--hand); color: var(--pen) }
+.rk-pts { font: 700 26px/1 var(--type); font-variant-numeric: tabular-nums }
+.visas { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 6px; margin: 4px 0 0; padding: 12px 0 0; border-top: 1px dashed var(--rule) }
+.visas li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; line-height: 1.2; text-align: center; color: var(--soft) }
+.vz { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font: 700 19px/1 var(--cond); border: 1.5px dashed rgba(28,42,68,.28); color: rgba(28,42,68,.3) }
+.visas .on { color: var(--ink) }
+.visas .on .vz { border: 2px solid var(--vc); color: var(--vc); box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 4.5px var(--vc); transform: rotate(var(--va)); mix-blend-mode: multiply }
+.mrz { margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--rule); font: 400 11px/1.35 var(--type); letter-spacing: .08em; opacity: .7; white-space: nowrap; overflow: hidden }
+.mrz span { display: block }
+.rk-bar { height: 8px; border: 1.5px solid var(--ink); border-radius: 1px; overflow: hidden }
+.rk-bar i { display: block; height: 100%; background: var(--pen); transition: width .5s var(--out) }
+.rk-next { font-size: 13px; line-height: 1.45; color: var(--soft); margin: 0 }
+.won { font: 700 26px/1.1 var(--hand); color: var(--red); transform: rotate(-1.5deg); align-self: flex-start }
+.recap { list-style: none; background: var(--card); box-shadow: var(--lift); padding: 4px 16px; border-radius: 2px }
+.recap li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 12px 0; border-top: 1px dashed var(--rule); font-size: 14.5px; line-height: 1.4 }
+.recap li:first-child { border-top: 0 }
+.recap i { font: 700 26px/0.8 var(--hand); font-style: normal }
+.recap .y i { color: var(--green) } .recap .n i { color: var(--red) }
+.recap span { display: block; color: var(--soft) }
+.lbl { font: 700 13px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase; color: var(--soft) }
+.share { display: flex; flex-direction: column; gap: 10px }
+.share-row { display: flex; gap: 8px; flex-wrap: wrap }
+.share-row .btn { flex: 1 1 88px; min-height: 46px; font-size: 13px; letter-spacing: .1em; padding: 0 8px }
+.code-in { font: 400 16px/1 var(--type); width: 100%; padding: 14px 12px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); border-radius: 2px; letter-spacing: .06em }
+.lnk { display: block; font-size: 13px; line-height: 1.4; word-break: break-all; background: rgba(28,42,68,.07); padding: 10px 12px; border-radius: 2px; user-select: all }
+.msg { font-size: 14px; line-height: 1.4; color: var(--red) }
+.stack { display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px }
+.stack .btn { width: 100% }
+.kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; padding: 4px 0 12px }
+.kv b { display: block; font: 700 34px/1 var(--cond); font-variant-numeric: tabular-nums } .kv span { font-size: 12px; color: var(--soft) }
+.end { text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; padding-top: 30px }
+.end .hand { align-self: center }
+
+/* otvaranje pisma nožem */
+.opening { flex: 1; min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; padding-top: 150px; cursor: pointer; transition: opacity .25s ease }
+.opening.leave { opacity: 0 }
+.oenv { position: relative; width: 100%; max-width: 400px; height: 250px; filter: drop-shadow(0 1px 2px rgba(28,42,68,.25)) drop-shadow(0 12px 18px rgba(28,42,68,.22)); animation: oin .5s var(--out) both }
+@keyframes oin { from { opacity: 0; transform: translateY(26px) rotate(-3deg) } }
+.oenv .oc { position: absolute; inset: 0; transform: none; min-height: 0; box-shadow: none }
+.oenv .oc.top { animation: strip .65s cubic-bezier(.4,0,.8,.6) 1.3s both }
+@keyframes strip { to { transform: translate(46px,-64px) rotate(11deg); opacity: 0 } }
+.oenv .oletter { position: absolute; left: 6%; right: 6%; top: 3px; height: 205px; border-radius: 2px; padding: 16px 16px 0; color: var(--letter-pen); font: 700 30px/1 var(--hand); animation: pull .75s var(--out) 1.6s both;
+  background: linear-gradient(rgba(70,45,10,.09), rgba(70,45,10,.09)) 0 50% / 100% 1px no-repeat, radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(120,80,20,.2)), var(--letter) }
+.oenv .oletter i { display: block; height: 2px; background: rgba(42,33,24,.22); margin-top: 13px; border-radius: 1px } .oenv .oletter i:nth-child(3) { width: 72% }
+@keyframes pull { to { transform: translateY(-132px) rotate(-1.5deg) } }
+.oenv .cutline { position: absolute; left: 0; top: 15px; height: 2px; width: 0; background: rgba(28,42,68,.55); animation: cut .8s linear .45s both, cutfade .3s ease 1.3s forwards }
+@keyframes cut { to { width: 100% } } @keyframes cutfade { to { opacity: 0 } }
+.oenv .knife { position: absolute; top: -5px; width: 160px; left: -160px; transform-origin: 100% 50%; animation: sweep .8s linear .45s both, kout .35s ease 1.25s forwards; filter: drop-shadow(0 3px 3px rgba(0,0,0,.28)) }
+@keyframes sweep { from { left: -160px; transform: rotate(5deg) } 50% { transform: rotate(2deg) } to { left: calc(100% + 24px); transform: rotate(5deg) } }
+@keyframes kout { to { opacity: 0; transform: translate(40px,-30px) rotate(-10deg) } }
+.ohint { opacity: .8 }
+@media (prefers-reduced-motion: reduce) {
+  html:not(.fx) .oenv, html:not(.fx) .oenv .oc.top, html:not(.fx) .oenv .oletter, html:not(.fx) .oenv .cutline, html:not(.fx) .oenv .knife { animation: none }
+  html:not(.fx) .view.anim > *, html:not(.fx) .pop, html:not(.fx) .view.anim > .sheet.unfold, html:not(.fx) .pm.thump, html:not(.fx) .frank.fresh .stamp-wrap, html:not(.fx) .pin.real { animation: none }
+  html:not(.fx) .opt.picked .box svg { animation: none; stroke-dashoffset: 0 } html:not(.fx) .opt.wrong .txt::after, html:not(.fx) .opt.right .txt::before { animation: none }
+  html:not(.fx) .btn, html:not(.fx) .env, html:not(.fx) button.cell { transition: none }
+}
+</style>
+
+<div class="app"><main class="view" id="view"></main></div>
+
+<script>
+/* ============ SADRŽAJ ============
+   Nova pisma dodaju se na kraj popisa; svaki dan od START otključa se jedno.
+   Prvo pitanje je ili izbor (q, opts, a) ili procjena broja (q, num). Ono piše i na omotnici kao mamac.
+   fig i figu: brojka koja se pamti iz priče, otisnuta na marki. note (neobavezno): osobna poruka rukopisom. */
+const START = '2026-11-12';
+const CATS = { pov: 'Povijest', geo: 'Geografija', inf: 'Informatika' };
+const CATS_GEN = { pov: 'povijesti', geo: 'geografije', inf: 'informatike' };
+let FACTS = [
+{ cat:'pov', title:'Kleopatra i Mjesec', fig:'2000', figu:'godina',
+  q:'Čemu je Kleopatra vremenski bliža?', opts:['Gradnji Velike piramide u Gizi','Slijetanju čovjeka na Mjesec'], a:1,
+  story:'Zamisli Kleopatru kako stoji pred piramidama u Gizi. Za nju su one bile čudo iz davnine: sagrađene su oko 2560. pr. Kr., dakle 2500 godina prije nje, a to je starije nego što je ona danas nama. Sad zbroji u drugu stranu. Kleopatra je umrla 30. pr. Kr., a Apollo 11 sletio je na Mjesec 1969. Između tih dvaju događaja prošlo je oko 2000 godina. Kleopatra je, dakle, bliža nama nego graditeljima piramida koje je gledala.',
+  quiz:[{q:'Kada je otprilike izgrađena Velika piramida?', opts:['Oko 560. pr. Kr.','Oko 2560. pr. Kr.','Oko 5560. pr. Kr.'], a:1},
+        {q:'Koliko godina dijeli Kleopatrinu smrt i slijetanje na Mjesec?', opts:['Oko 1000','Oko 2000','Oko 3500'], a:1}] },
+{ cat:'geo', title:'Plivanje iz Amerike u Rusiju', fig:'4', figu:'km',
+  q:'Koliko su Rusija i SAD udaljeni na najbližoj točki?', opts:['Oko 4 km','Oko 85 km','Oko 320 km','Oko 1200 km'], a:0,
+  story:'U Beringovu prolazu leže dva otoka. Veliki Diomed bio je sovjetski, Mali Diomed američki, a dijeli ih manje od 4 km mora. Između njih prolazi datumska granica: na ruskom otoku je 21 sat više nego na američkom, pa ih zovu Otok sutrašnjice i Otok jučerašnjice. U hladnom ratu ta se granica zvala Ledena zavjesa i nitko nije smio preko. Do 7. kolovoza 1987., kad je plivačica Lynne Cox, u običnom kupaćem kostimu, preplivala prolaz za nešto više od dva sata, i to nakon godina molbi da joj sovjetske vlasti dopuste prijelaz. Voda je imala samo nekoliko stupnjeva iznad nule.',
+  quiz:[{q:'Kako se u hladnom ratu zvala granica između otoka?', opts:['Berlinski zid','Ledena zavjesa','Bambusova zavjesa'], a:1},
+        {q:'Koliko je otprilike bila hladna voda?', opts:['Oko 5 °C','Oko 12 °C','Oko 20 °C'], a:0}] },
+{ cat:'inf', title:'Prvi pravi bug', fig:'1947', figu:'',
+  q:'Što su inženjeri 1947. pronašli u računalu koje nije radilo?', opts:['Miša','Moljca','Pauka','Mrava'], a:1,
+  story:'Rujan 1947., Harvard. Računalo Mark II, veliko kao soba, odjednom daje krive rezultate. Tehničari otvaraju stroj i traže kvar. I nalaze ga: moljac zaglavljen u releju. Pincetom ga vade i ljepljivom trakom lijepe u dnevnik rada, uz pripis da je to prvi stvarni slučaj pronađenog buga. Taj dnevnik s moljcem čuva se i danas u muzeju Smithsonian. Grace Hopper rado je pričala tu priču, pa se pročula po svijetu. Riječ bug za grešku nije bila njihova ideja: Thomas Edison koristio ju je već 1878.',
+  quiz:[{q:'U kojem je računalu pronađen moljac?', opts:['ENIAC','Harvard Mark II','Colossus'], a:1},
+        {q:'Tko je riječ bug za grešku koristio desetljećima ranije?', opts:['Thomas Edison','Alan Turing','Nikola Tesla'], a:0}] },
+{ cat:'pov', title:'Rat protiv emua', fig:'20 000', figu:'emua',
+  q:'Protiv koga je 1932. australska vojska izgubila „rat”?', opts:['Pobunjenih farmera','Emua','Divljih deva','Klokana'], a:1,
+  story:'Australija, 1932. Ratni veterani postali su farmeri pšenice, a na njihova polja spustilo se oko 20 000 emua, ptica visokih gotovo dva metra. Gazile su ograde i jele usjev. Farmeri su zatražili vojsku. Vlada je poslala majora, dva vojnika, dva mitraljeza i 10 000 metaka. Emui su se razdvojili u male skupine i bježali brže nego što se moglo nišaniti. Nakon nekoliko tjedana vojska je odustala. U novinama se zvalo Emu War, rat emua, i naziv je ostao do danas.',
+  quiz:[{q:'Koliko je otprilike emua haralo po poljima?', opts:['200','2000','20 000'], a:2},
+        {q:'Zašto ih je bilo tako teško pogoditi?', opts:['Razdvojili su se u male skupine i brzo bježali','Letjeli su visoko','Skrivali su se pod zemljom'], a:0}] },
+{ cat:'geo', title:'Točka Nemo', fig:'2700', figu:'km',
+  q:'Koliko je kilometara najudaljenija točka od kopna u oceanu udaljena od najbližeg kopna?', num:{min:100, max:6000, step:100, a:2700, tol:400, unit:' km', du:' km', real:'oko 2700 km'},
+  story:'Gdje na Zemlji možeš biti najdalje od ikakvog kopna? Odgovor je 1992. izračunao hrvatski inženjer Hrvoje Lukatela. Točka leži u južnom Pacifiku, a najbliže kopno, nekoliko sićušnih otoka, udaljeno je oko 2700 km. Nazvali su je Točka Nemo, po kapetanu iz Verneova romana, a nemo na latinskom znači „nitko”. Najbliži ljudi često su astronauti na Međunarodnoj svemirskoj postaji, koja kruži oko 400 km iznad glave. To je i svemirsko groblje: ondje se namjerno spuštaju stare letjelice, među njima i ruska postaja Mir 2001.',
+  quiz:[{q:'Tko je izračunao položaj te točke?', opts:['Jules Verne','Hrvoje Lukatela','Neil Armstrong'], a:1},
+        {q:'Tko je često bliže toj točki od svakog kopna?', opts:['Ribari','Astronauti na svemirskoj postaji','Kitovi'], a:1}] },
+{ cat:'inf', title:'Znak @ i prva e-pošta', fig:'@', figu:'',
+  q:'Koji je znak 1971. odabran da odvoji ime korisnika od imena računala u e-adresi?', opts:['@','#','&','%'], a:0,
+  story:'1971., Cambridge u Massachusettsu. Ray Tomlinson radi na ARPANET-u i smisli kako poslati poruku s jednog računala na drugo. Treba mu znak koji odvaja ime korisnika od imena računala. Pogleda tipkovnicu i odabere @, jer ga nijedno ime nije koristilo, a na engleskom znači „kod”. Prva poruka? Ni on se nije sjećao, vjerojatno nešto poput QWERTYUIOP. Računala su, usput, stajala jedno do drugog u istoj sobi. Sve što danas zovemo e-poštom počelo je kao eksperiment bez ceremonije.',
+  quiz:[{q:'Zašto je odabran baš taj znak?', opts:['Nijedno ime ga nije koristilo, a značio je „kod”','Bio je na svim europskim tipkovnicama','Slučajno ga je pritisnuo'], a:0},
+        {q:'Koliko su bila udaljena računala prve poruke?', opts:['Stajala su jedno do drugog','Bila su na dva kontinenta','Bila su u susjednom gradu'], a:0}] },
+{ cat:'pov', title:'Deset dana koji ne postoje', fig:'10', figu:'dana',
+  q:'Koliko je dana nestalo iz kalendara u listopadu 1582.?', num:{min:1, max:30, step:1, a:10, tol:1, unit:' dana', du:' dana'},
+  story:'Zaspiš u četvrtak, 4. listopada 1582., a probudiš se u petak, 15. listopada. Deset dana naprosto nije bilo. Stari julijanski kalendar kasnio je za Suncem otprilike jedan dan svakih 128 godina, pa se do 16. stoljeća nakupilo deset dana. Papa Grgur XIII. popravio ga je jednim potezom pera: nakon 4. listopada odmah je došao 15. Mnoge katoličke zemlje prešle su odmah ili ubrzo, a Rusija tek 1918. Zato se Oktobarska revolucija, koja se 1917. po njihovu kalendaru dogodila u listopadu, kod nas slavi u studenom.',
+  quiz:[{q:'Koji je papa uveo novi kalendar?', opts:['Grgur XIII.','Julije Cezar','Napoleon'], a:0},
+        {q:'Zašto je Oktobarska revolucija kod nas u studenom?', opts:['Rusija je još koristila stari kalendar','Pošta je kasnila','Preimenovan je mjesec'], a:0}] },
+{ cat:'geo', title:'Zelena Sahara', fig:'6000', figu:'godina',
+  q:'Što je prije oko 6000 godina bila Sahara?', opts:['Zelena savana s jezerima','Ledena pustinja','Morsko dno','Gusta prašuma'], a:0,
+  story:'Prije otprilike 6000 godina u Sahari su plivali nilski konji. Bili su ondje zeleni pašnjaci, jezera i rijeke, a ljudi su na stijenama slikali stada krava i plivače. Razlog nije bio čovjek nego nebo: Zemljina os polako se ljulja, pa se monsun pomaknuo na sjever i donio kišu. Kad se ljuljanje nastavilo, kiša je otišla, a Sahara se osušila. Danas njezina prašina putuje preko Atlantika i gnoji amazonsku prašumu, kojoj donosi fosfor.',
+  quiz:[{q:'Što je donijelo kišu u Saharu?', opts:['Pomak monsuna zbog ljuljanja Zemljine osi','Gradnja kanala','Erupcija vulkana'], a:0},
+        {q:'Kamo vjetar nosi saharsku prašinu?', opts:['U Amazonu','U Alpe','U Australiju'], a:0}] },
+{ cat:'inf', title:'Google se prije zvao BackRub', fig:'1997', figu:'',
+  q:'Kako se u početku zvala tražilica koja je postala Google?', opts:['BackRub','FindIt','Searchy','WebCrawl'], a:0,
+  story:'Prije nego što je postao Google, bio je BackRub. Dvojica studenata sa Stanforda, Larry Page i Sergey Brin, 1996. složila su tražilicu koja stranice rangira po tome koliko drugih stranica pokazuje na njih, po povratnim vezama, na engleskom back links. Trebalo im je novo ime pa su predložili googol, broj koji je 1 iza kojeg slijedi sto nula, da pokažu da žele organizirati golemu količinu informacija. Prema priči, kolega je pri provjeri domene krivo upisao ime, i ostalo je google. Domena google.com registrirana je 15. rujna 1997.',
+  quiz:[{q:'Koliko nula ima googol?', opts:['10','100','1000'], a:1},
+        {q:'Po čemu je BackRub rangirao stranice?', opts:['Po povratnim vezama','Po broju slika','Po duljini teksta'], a:0}] },
+{ cat:'pov', title:'Kravata je Hrvat', fig:'HR', figu:'',
+  q:'Od koje riječi dolazi riječ „kravata”?', opts:['Od riječi Hrvat','Od turske riječi za vrat','Od latinske riječi za svilu','Od imena francuskog krojača'], a:0,
+  story:'U 17. stoljeću u francuskoj su vojsci služili hrvatski vojnici, a oko vrata nosili su svilene marame. Pariški dvor bio je oduševljen. Luj XIV. uveo je „hrvatsku maramu” u modu, a Francuzi su Hrvate zvali Cravates. Iz toga je nastala francuska riječ cravate, a iz nje kravata u mnogim jezicima, pa i engleski cravat. Zato u Hrvatskoj postoji Dan kravate, 18. listopada.',
+  quiz:[{q:'Tko je nosio te marame u francuskoj vojsci?', opts:['Hrvatski vojnici','Mornari','Švicarski gardisti'], a:0},
+        {q:'Koji je francuski kralj uveo maramu u modu?', opts:['Luj XIV.','Napoleon','Henrik IV.'], a:0}] },
+{ cat:'geo', title:'Najviši vrh nije najviši', fig:'6263', figu:'m',
+  q:'Koji je vrh najudaljeniji od središta Zemlje?', opts:['Mount Everest','K2','Chimborazo','Kilimandžaro'], a:2,
+  story:'Najviša planina nad morem je Everest, ali najudaljeniji od središta Zemlje nije. Zemlja je na ekvatoru ispupčena, pa je vulkan Chimborazo u Ekvadoru, tik uz ekvator, svojim vrhom oko 2 km dalje od središta planeta nego Everest, iako je nad morem visok samo 6263 m. Alexander von Humboldt popeo se 1802. gotovo do vrha, na oko 5600 m. A mjereno od podnožja do vrha, najviša je Mauna Kea na Havajima, s više od 10 000 m, većinom ispod vode.',
+  quiz:[{q:'U kojoj je državi Chimborazo?', opts:['Peru','Ekvador','Nepal'], a:1},
+        {q:'Koja je planina najviša mjereno od podnožja?', opts:['Mauna Kea','Aconcagua','Denali'], a:0}] },
+{ cat:'inf', title:'Kamera za kavu', fig:'1991', figu:'',
+  q:'Što je snimala prva web kamera na svijetu?', opts:['Akvarij','Ulaz u zgradu','Aparat za kavu','Zidni sat'], a:2,
+  story:'Sveučilište u Cambridgeu, 1991. Znanstvenici su hodali do zajedničkog aparata za kavu u Trojanskoj sobi, a ondje ih je često čekala prazna posuda. Pa su na aparat usmjerili kameru, spojili je na mrežu i sad su svi mogli na ekranu provjeriti ima li kave. Slika je 1993. puštena na web i postala jedna od prvih internetskih atrakcija. Kad su je 2001. ugasili, aparat je prodan na dražbi za 3350 funti njemačkom portalu Spiegel Online.',
+  quiz:[{q:'Zašto su postavili kameru?', opts:['Da vide ima li kave','Zbog krađe šalica','Kao test za videopozive'], a:0},
+        {q:'Tko je kupio aparat na dražbi?', opts:['Spiegel Online','Google','BBC'], a:0}] },
+{ cat:'pov', title:'Najkraći rat u povijesti', fig:'38', figu:'minuta',
+  q:'Koliko je minuta trajao najkraći rat u povijesti?', num:{min:5, max:300, step:5, a:40, tol:10, unit:' min', du:' min', real:'38 do 45 min'},
+  story:'27. kolovoza 1896. Britanija je zaratila sa Zanzibarom. Novi sultan Khalid tek je dva dana ranije preuzeo vlast, bez britanskog odobrenja, i odbio je napustiti palaču. U 9 sati ujutro britanski brodovi otvorili su vatru. Prije 10 sati bilo je gotovo: palača u plamenu, sultan pobjegao u njemački konzulat. Rat je trajao između 38 i 45 minuta, ovisno o izvoru, i ostao je upisan kao najkraći u povijesti.',
+  quiz:[{q:'Koliko je dana sultan vladao prije rata?', opts:['2','20','200'], a:0},
+        {q:'Gdje je sultan pobjegao?', opts:['U njemački konzulat','U Francusku','U džunglu'], a:0}] },
+{ cat:'geo', title:'Let od 53 sekunde', fig:'53', figu:'sekunde',
+  q:'Koliko je sekundi trajao najbrži zabilježeni let na najkraćoj redovnoj putničkoj liniji svijeta?', num:{min:10, max:600, step:5, a:53, tol:15, unit:' s', du:' s', real:'53 sekunde'},
+  story:'Škotsko otočje Orkney. Mali avion polijeće s otoka Westray, a već nakon 2,7 km sleti na Papa Westray. Po redu letenja to je oko jedna i pol do dvije minute, a najbrži zabilježeni let trajao je 53 sekunde, uz vjetar u leđa. Najkraća je redovna putnička linija na svijetu. Avion jedva stigne dosegnuti visinu, a već se spušta. Upravo zato je ta linija postala atrakcija i među turistima.',
+  quiz:[{q:'Gdje se nalaze ti otoci?', opts:['Orkney u Škotskoj','Lofoti u Norveškoj','Azori'], a:0},
+        {q:'Koliko su otoci udaljeni?', opts:['2,7 km','12 km','27 km'], a:0}] },
+{ cat:'inf', title:'Ada i prvi program', fig:'1843', figu:'',
+  q:'Koje je godine objavljen prvi računalni program?', opts:['1843.','1936.','1951.','1969.'], a:0,
+  story:'Ada Lovelace imala je tek nekoliko tjedana kad ju je napustio otac, pjesnik Lord Byron, i nikad ga nije upoznala. Majka se bojala da će naslijediti njegovu pjesničku ćud pa ju je odgajala kroz matematiku. 1843. Ada je prevela članak o Babbageovu Analitičkom stroju i dodala vlastite bilješke, dulje od samog članka. U njima je korak po korak opisala kako bi stroj izračunao Bernoullijeve brojeve. To se smatra prvim računalnim programom. Stroj nikad nije dovršen, pa ga tada nitko nije mogao pokrenuti.',
+  quiz:[{q:'Za čiji je stroj Ada pisala program?', opts:['Charlesa Babbagea','Blaisea Pascala','Alana Turinga'], a:0},
+        {q:'Tko je bio njezin otac?', opts:['Charles Darwin','Lord Byron','Isaac Newton'], a:1}] },
+{ cat:'pov', title:'Vikinzi prije Kolumba', fig:'1021', figu:'',
+  q:'Koliko su godina prije Kolumba Vikinzi sjekli drva u Newfoundlandu?', num:{min:100, max:800, step:10, a:470, tol:40, unit:' god.', du:' god.', real:'471 godina'},
+  story:'Svi uče da je Ameriku 1492. otkrio Kolumbo. Ali u Newfoundlandu, na lokalitetu L’Anse aux Meadows, stoje ostaci vikinškog naselja. Pitanje je bilo kad. Odgovor je 2021. dala znanost: 993. godine jaka sunčeva oluja ostavila je trag u prstenovima drveća, a drvo iz naselja nosi tragove metalnih alata. Brojanjem prstenova nakon tog traga dobili su točnu godinu: 1021. Vikinzi su dakle sjekli šumu 471 godinu prije Kolumba, i to je najstariji točno datiran europski boravak u Americi.',
+  quiz:[{q:'Kako je utvrđena točna godina?', opts:['Po prstenovima drveća i sunčevoj oluji','Po kronikama','Po novčićima'], a:0},
+        {q:'Kako se zove lokalitet?', opts:['L’Anse aux Meadows','Machu Picchu','Jamestown'], a:0}] },
+{ cat:'geo', title:'Francuska graniči s Brazilom', fig:'730', figu:'km',
+  q:'S kojom državom Francuska ima najdulju kopnenu granicu?', opts:['Sa Španjolskom','S Njemačkom','S Brazilom','S Belgijom'], a:2,
+  story:'Francuska ima najdulju kopnenu granicu s Brazilom. Zvuči nemoguće, ali Francuska Gvajana na sjeveru Južne Amerike punopravni je dio Francuske i Europske unije, s eurom i francuskom zastavom. Granica s Brazilom duga je oko 730 km, dulja nego ona sa Španjolskom. Iz Gvajane, iz mjesta Kourou, lansiraju se europske rakete, jer ih blizina ekvatora dodatno zalijeće. Zahvaljujući prekomorskim područjima Francuska pokriva 12 vremenskih zona, više od ijedne druge države.',
+  quiz:[{q:'Odakle se lansiraju europske rakete?', opts:['Iz Kouroua u Francuskoj Gvajani','Iz Bordeauxa','Iz Brazila'], a:0},
+        {q:'Koliko vremenskih zona pokriva Francuska?', opts:['3','7','12'], a:2}] },
+{ cat:'inf', title:'Disk težak tonu', fig:'4', figu:'MB',
+  q:'Koliko je podataka stalo na prvi tvrdi disk iz 1956.?', opts:['Oko 50 KB','Oko 4 MB','Oko 500 MB','Oko 4 GB'], a:1,
+  story:'IBM 350, 1956. Prvi tvrdi disk na svijetu, dio računala RAMAC. Imao je 50 ploča promjera 61 cm, bio velik kao dva hladnjaka i težio više od tone, pa su ga na avione utovarivali viličarima. Stalo je na njega oko 5 milijuna znakova, to jest otprilike 4 megabajta, što je jedna fotografija s današnjeg mobitela. Nitko ga nije mogao kupiti: IBM ga je samo iznajmljivao, za 3200 dolara mjesečno.',
+  quiz:[{q:'Koja ga je tvrtka napravila?', opts:['IBM','Intel','Apple'], a:0},
+        {q:'Kako se mogao nabaviti?', opts:['Samo iznajmiti','Kupiti u dućanu','Nasljediti'], a:0}] },
+{ cat:'pov', title:'Napoleon nije bio nizak', fig:'169', figu:'cm',
+  q:'Koliko je centimetara bio visok Napoleon?', num:{min:150, max:190, step:1, a:169, tol:2, unit:' cm', du:' cm'},
+  story:'Napoleon je bio visok oko 169 cm, malo iznad prosjeka za Francuza svog vremena. Tko ga je onda smanjio? Dijelom mjerne jedinice: u francuskim stopama i palcima imao je 5 stopa i 2 palca, što zvuči malo, ali francuski palac bio je dulji od engleskog. Dijelom britanski karikaturist James Gillray, koji ga je crtao kao ljutitog čovječuljka po imenu Little Boney. Karikatura je preživjela cara.',
+  quiz:[{q:'Zašto se mislilo da je nizak?', opts:['Zbog razlike u mjernim jedinicama','Zbog krive statue','Zbog njegovih memoara'], a:0},
+        {q:'Tko ga je prikazivao kao sitnog čovječuljka?', opts:['Britanski karikaturist James Gillray','Ruski pisci','Njegovi generali'], a:0}] },
+{ cat:'geo', title:'Zemlja tisuću otoka', fig:'1244', figu:'otoka',
+  q:'Hrvatska ima više od 1200 otoka, otočića i hridi. Koliko ih je stalno naseljeno?', num:{min:0, max:600, step:5, a:48, tol:15, unit:'', du:''},
+  story:'Na hrvatskoj obali obično se broji 1244 otoka, otočića, hridi i grebena, a stalno je naseljeno oko pedeset, ovisno o tome što se računa. Dva najveća, Cres i Krk, gotovo su jednaka: svaki oko 405 km². Desetljećima se učilo da je Krk veći, sve dok novija mjerenja nisu pokazala da je Cres za dlaku veći. Krk je spojen mostom s kopnom, pa ga ipak više ljudi poznaje.',
+  quiz:[{q:'Koja su dva najveća hrvatska otoka?', opts:['Brač i Hvar','Cres i Krk','Pag i Korčula'], a:1},
+        {q:'Koliku površinu ima svaki od njih?', opts:['Oko 105 km²','Oko 405 km²','Oko 905 km²'], a:1}] },
+{ cat:'pov', title:'Oxford je stariji od Asteka', fig:'1096', figu:'',
+  q:'Što je starije?', opts:['Sveučilište u Oxfordu','Astečki glavni grad Tenochtitlan'], a:0,
+  story:'U Oxfordu se predavalo već 1096. godine. Astečki grad Tenochtitlan osnovan je tek 1325., na otočiću usred jezera. Kad su Asteci kopali prve temelje, Oxford je imao više od dvjesto godina nastave. Astečko carstvo palo je 1521., a Oxford i dalje radi. Na mjestu Tenochtitlana danas stoji Ciudad de México.',
+  quiz:[{q:'Koje je godine osnovan Tenochtitlan?', opts:['1096.','1325.','1492.'], a:1},
+        {q:'Koji grad danas stoji na njegovom mjestu?', opts:['Lima','Ciudad de México','Havana'], a:1}] },
+{ cat:'pov', title:'Newton, lovac na krivotvoritelje', fig:'1699', figu:'',
+  q:'Što je Isaac Newton radio osim fizike u kasnijem životu?', opts:['Lovio je krivotvoritelje novca','Zapovijedao je mornaricom','Vodio je kraljevsku kuhinju','Bio je putujući glumac'], a:0,
+  story:'1696. Isaac Newton prestao je biti samo znanstvenik i postao čuvar kraljevske kovnice u Londonu. Krivotvorenje novca tada se kažnjavalo smrću, a on se ozbiljno prihvatio posla. Prema biografima, preodjeven je obilazio krčme, saslušavao svjedoke i skupljao dokaze. Najpoznatiji krivotvoritelj William Chaloner završio je 1699. na vješalima, a Newton je kovnicom upravljao sve do smrti 1727.',
+  quiz:[{q:'Kako je Newton skupljao dokaze?', opts:['Preodjeven je obilazio krčme','Slao je špijune u Francusku','Čitao je tuđa pisma'], a:0},
+        {q:'Koja je tada bila kazna za krivotvorenje novca?', opts:['Smrt','Godina dana zatvora','Novčana kazna'], a:0}] },
+{ cat:'geo', title:'Trezor za kraj svijeta', fig:'1,4M', figu:'uzoraka',
+  q:'Što se čuva duboko u planini na norveškom Svalbardu?', opts:['Sjemenje usjeva iz cijelog svijeta','Zlatne poluge','Kopija interneta','Zamrznuti embriji'], a:0,
+  story:'Na otočju Svalbard, bliže Sjevernom polu nego Norveškoj, u planinu je uklesan tunel. Ondje, u vječnom ledu, od 2008. stoji svjetski trezor sjemena, danas s oko 1,4 milijuna uzoraka usjeva iz cijelog svijeta. Služi kao osiguranje ako rat, bolest ili katastrofa unište lokalne banke sjemena. To se doista dogodilo: 2015. međunarodni istraživački centar ICARDA, koji je zbog rata morao napustiti Alep u Siriji, zatražio je svoje uzorke natrag, i to je bilo prvo povlačenje u povijesti trezora. Poslano je oko 38 000 uzoraka, među njima pšenica, ječam, leća i slanutak.',
+  quiz:[{q:'U kojoj se državi nalazi trezor?', opts:['Norveškoj','Švedskoj','Kanadi'], a:0},
+        {q:'Zašto su 2015. uzorci vraćeni iz trezora?', opts:['Rat je ugrozio banku sjemena u Alepu','Za izložbu','Zbog loše žetve u Norveškoj'], a:0}] },
+{ cat:'inf', title:'Prvi smješko', fig:':-)', figu:'',
+  q:'Zašto je 1982. izmišljen prvi smješko :-)?', opts:['Da se šale razlikuju od ozbiljnih poruka','Zbog ograničenja ekrana','Kao logotip tvrtke','Za oglase'], a:0,
+  story:'19. rujna 1982., sveučilište Carnegie Mellon. Na internoj oglasnoj ploči netko je u šali napisao da se u dizalu prolila živa, a ljudi su to shvatili ozbiljno. Tada je Scott Fahlman predložio: šale ćemo označavati znakovima :-) koje čitaš okrenute za 90 stupnjeva. A ozbiljne poruke znakom :-(. Ideja se proširila internetom, a izvorna je poruka dugo bila izgubljena pa je naknadno vraćena sa stare sigurnosne vrpce.',
+  quiz:[{q:'Na kojem je sveučilištu izmišljen smješko?', opts:['Carnegie Mellon','Oxford','Harvard'], a:0},
+        {q:'Što je prema prijedlogu trebao označavati znak :-( ?', opts:['Ozbiljnu poruku','Tužnu šalu','Pogrešku'], a:0}] },
+{ cat:'pov', title:'Kolumbo i pomrčina', fig:'1504', figu:'',
+  q:'Čime je Kolumbo 1504. na Jamajci prestrašio mještane?', opts:['Pomrčinom Mjeseca','Topovima','Kometom','Zvjezdanim padom'], a:0,
+  story:'Kolumbo je 1503. nasukao brodove na Jamajci i ondje ostao gotovo godinu dana. Mještani su mu prestali donositi hranu, a posada je gladovala. Spas je došao iz astronomskog almanaha: Kolumbo je znao da će 29. veljače 1504. (po tadašnjem kalendaru) biti pomrčina Mjeseca. Pozvao je poglavice i rekao im da će Bog odnijeti Mjesec ako ih ne počnu opet hraniti. Kad je Mjesec potamnio i pocrvenio, odmah su donijeli hranu.',
+  quiz:[{q:'Iz čega je Kolumbo znao kad će biti pomrčina?', opts:['Iz astronomskog almanaha','Iz sna','Od mornara'], a:0},
+        {q:'Koliko je otprilike Kolumbo ostao nasukan?', opts:['Oko godinu dana','Dva tjedna','Pet godina'], a:0}] },
+{ cat:'geo', title:'Plitvice rastu', fig:'16', figu:'jezera',
+  q:'Što gradi pregrade koje stvaraju Plitvička jezera?', opts:['Sedra koju talože mahovine i alge','Led','Vulkanska lava','Ljudske brane'], a:0,
+  story:'Plitvička jezera nisu stvorena branama, nego sedrom: vapnenom tvari koju talože mahovine i alge i tako polako grade prirodne pregrade preko kojih voda pada u slapove. Pregrade rastu oko jedan centimetar godišnje, pa se jezera i slapovi stoljećima polako mijenjaju. Ukupno ih je 16, a najviši slap, Veliki slap, pada s oko 78 metara. UNESCO je park zaštitio 1979.',
+  quiz:[{q:'Koliko je Plitvičkih jezera?', opts:['6','16','60'], a:1},
+        {q:'Koje je godine park upisan na UNESCO-ov popis?', opts:['1949.','1979.','1999.'], a:1}] },
+{ cat:'inf', title:'Računalo koje je odvelo na Mjesec', fig:'4', figu:'KB',
+  q:'Koliko je kilobajta radne memorije imalo računalo Apolla 11?', num:{min:1, max:64, step:1, a:4, tol:1, unit:' KB', du:' KB', real:'oko 4 KB'},
+  story:'Računalo koje je 1969. vodilo Apollo 11 imalo je oko 4 KB radne memorije, a današnji mobitel ima milijune puta više. Softver je vodila Margaret Hamilton, a ispisi njezina koda složeni jedan na drugi bili su viši od nje. Pri slijetanju računalo se preopteretilo i javilo alarm 1202. Kontrolori u Houstonu odlučili su da je sigurno nastaviti, a Armstrong je zadnje metre preuzeo ručno.',
+  quiz:[{q:'Tko je vodila razvoj softvera?', opts:['Margaret Hamilton','Grace Hopper','Ada Lovelace'], a:0},
+        {q:'Koji je alarm računalo javilo pri slijetanju?', opts:['404','1202','500'], a:1}] },
+{ cat:'pov', title:'Dubrovačka karantena', fig:'30', figu:'dana',
+  q:'Koliko je dana 1377. Dubrovnik zadržavao putnike iz zaraženih krajeva?', num:{min:5, max:60, step:1, a:30, tol:3, unit:' dana', du:' dana'},
+  story:'1377. Dubrovačka Republika donijela je odluku da putnici i trgovci iz krajeva zahvaćenih kugom moraju čekati 30 dana na obližnjim otočićima prije ulaska u grad. Bila je to jedna od prvih organiziranih karantena u Europi. Kasnije se razdoblje produljilo na 40 dana, a od talijanskog quaranta, četrdeset, nastala je riječ karantena. Dubrovnik je 1416. kao jedan od prvih gradova u Europi zabranio i trgovinu robljem.',
+  quiz:[{q:'Od koje riječi dolazi „karantena”?', opts:['Od talijanskog „četrdeset”','Od latinskog „kuga”','Od francuskog „zid”'], a:0},
+        {q:'Koje je godine Dubrovnik zabranio trgovinu robljem?', opts:['1416.','1616.','1816.'], a:0}] },
+{ cat:'geo', title:'Orgulje koje sviraju valovi', fig:'35', figu:'cijevi',
+  q:'Tko ili što pokreće zadarske morske orgulje?', opts:['Valovi','Vjetar','Električni motor','Turisti'], a:0,
+  story:'Na zadarskoj obali, ispod mramornih stepenica, 2005. otvorene su morske orgulje, djelo arhitekta Nikole Bašića. Nema orguljaša ni struje: valovi guraju zrak kroz 35 cijevi, a svaka cijev daje svoj ton, pa se čuju slučajni akordi koji nikad nisu isti. Što je more jače, orgulje su glasnije, a kad je more mirno, tek tiho dišu. Pored njih je Pozdrav Suncu, krug od staklenih ploča koje navečer svijetle.',
+  quiz:[{q:'Koliko cijevi imaju orgulje?', opts:['12','35','100'], a:1},
+        {q:'Tko ih je osmislio?', opts:['Nikola Bašić','Ivan Meštrović','Nikola Tesla'], a:0}] },
+{ cat:'inf', title:'Prva domena', fig:'1985', figu:'',
+  q:'Koja je tvrtka 1985. registrirala prvu .com domenu?', opts:['Symbolics','Apple','Microsoft','IBM'], a:0,
+  story:'15. ožujka 1985. mala američka tvrtka Symbolics, koja je proizvodila specijalna računala, registrirala je symbolics.com, prvu .com domenu na svijetu. U to vrijeme gotovo nitko nije znao što to znači: do kraja iste godine registrirano ih je samo šest. Danas ih je stotine milijuna. Oznaka .com znači commercial, komercijalno, i tada je bila namijenjena tvrtkama.',
+  quiz:[{q:'Koliko je .com domena bilo do kraja 1985.?', opts:['Šest','Šest stotina','Šezdeset tisuća'], a:0},
+        {q:'Što znači oznaka .com?', opts:['Commercial','Community','Computer'], a:0}] },
+{ cat:'pov', title:'Pogreška koja je srušila zid', fig:'1989', figu:'',
+  q:'Što je 9. studenoga 1989. potaknulo otvaranje Berlinskog zida?', opts:['Nespretna izjava dužnosnika na konferenciji za novinare','Napad vojske','Odluka UN-a','Potres'], a:0,
+  story:'Navečer 9. studenoga 1989. istočnonjemački dužnosnik Günter Schabowski čitao je na konferenciji za novinare nova pravila o putovanjima. Novinar ga je pitao od kada vrijede, a on je, nespreman, odgovorio: pa, koliko znam, odmah, bez odgode. Pravila su zapravo trebala stupiti na snagu sutradan. Vijest se proširila televizijom i tisuće ljudi okupile su se na graničnim prijelazima. Graničari su popustili pa je zid, koji je stajao 28 godina, te noći otvoren.',
+  quiz:[{q:'Što je dužnosnik rekao o početku važenja pravila?', opts:['Odmah, bez odgode','Sutra u podne','Za tjedan dana'], a:0},
+        {q:'Koliko je godina zid stajao?', opts:['12','28','45'], a:1}] },
+{ cat:'geo', title:'Europski Kineski zid', fig:'5,5', figu:'km',
+  q:'Koliko su kilometara dugačke stonske zidine?', num:{min:1, max:20, step:1, a:5, tol:1, unit:' km', du:' km', real:'oko 5,5 km'},
+  story:'Na poluotoku Pelješcu stoji grad Ston, a oko njega zidine duge danas oko 5,5 kilometara (prvotno su imale oko 7 km i oko 40 kula). Gradila ih je Dubrovačka Republika od 14. stoljeća, i to zbog soli. Sol je tada bila gotovo kao novac, pa su obližnje solane bile veliki izvor bogatstva i trebalo ih je braniti. Zidine se još uvijek ubrajaju među najdulje sačuvane u Europi, a solane i danas rade.',
+  quiz:[{q:'Što su stonske zidine štitile?', opts:['Solane','Zlatni rudnik','Vinograde'], a:0},
+        {q:'Kojoj su državi pripadale u vrijeme gradnje?', opts:['Dubrovačkoj Republici','Mletačkoj Republici','Austriji'], a:0}] },
+{ cat:'inf', title:'QR kod i igra Go', fig:'1994', figu:'',
+  q:'Za što je 1994. izmišljen QR kod?', opts:['Za praćenje dijelova u tvornici automobila','Za plaćanje u dućanima','Za oglase na plakatima','Za ulaznice'], a:0,
+  story:'1994. japanski inženjer Masahiro Hara radio je u tvornici i trebao je bolji način označavanja dijelova za automobile od običnog crtičnog koda, koji je držao premalo podataka. Inspiraciju je našao u ploči za igru Go, crno-bijelom rasteru kamenčića. Tako je nastao QR kod, kratica za quick response, brzi odgovor, jer se čita u djeliću sekunde iz bilo kojeg smjera. Tvrtka je odlučila da se njegov patent ne naplaćuje, pa se proširio svijetom.',
+  quiz:[{q:'Što je inspiriralo uzorak QR koda?', opts:['Ploča za igru Go','Šahovska ploča','Mozaik u crkvi'], a:0},
+        {q:'Što znači kratica QR?', opts:['Quick response','Quality read','Quiet routine'], a:0}] },
+{ cat:'inf', title:'Wi-Fi ne znači ništa', fig:'1999', figu:'',
+  q:'Što znači kratica Wi-Fi?', opts:['Ništa, to je samo izmišljeno ime','Wireless Fidelity','Wide Fiber','Wired Finder'], a:0,
+  story:'Tehnički standard bežične mreže zove se IEEE 802.11, što se teško pamti i još teže prodaje. Zato je 1999. udruga proizvođača angažirala agenciju Interbrand da smisli privlačnije ime. Rezultat je Wi-Fi, a pogađaš li što znači? Ništa. Ime je izmišljeno da zvuči kao hi-fi, a izraz wireless fidelity, bežična vjernost, kasnije je dodan samo kao slogan i nikad nije bio pravo značenje.',
+  quiz:[{q:'Koja je agencija smislila ime Wi-Fi?', opts:['Interbrand','Google','IEEE'], a:0},
+        {q:'Kako se zove tehnički standard bežične mreže?', opts:['IEEE 802.11','USB-C','HDMI 2.0'], a:0}] },
+{ cat:'inf', title:'Računala koja će 2038. zaboraviti vrijeme', fig:'2038', figu:'',
+  q:'Od kojeg datuma računala sa sustavom Unix broje sekunde?', opts:['1. siječnja 1970.','1. siječnja 1900.','1. siječnja 2000.','1. siječnja 1980.'], a:0,
+  story:'Računala sa sustavom Unix ne pamte datum kao dan i mjesec, nego kao broj sekundi koje su prošle od 1. siječnja 1970. Stari 32-bitni sustavi taj broj spremaju u prostor koji ima granicu. Dosegnut će je 19. siječnja 2038. u 03:14:07, a već sljedeće sekunde broj će se prevrnuti i računalo će pomisliti da je 1901. godina. Slično je prijetilo 2000., kad su programi pamtili godinu samo s dvije znamenke, pa su ga zvali Y2K.',
+  quiz:[{q:'Koje je godine na starim sustavima prijetio sličan problem s dvoznamenkastom godinom?', opts:['2000.','1984.','2011.'], a:0},
+        {q:'Koja godina se pojavi nakon što se broj prevrne?', opts:['1901.','1970.','2038.'], a:0}] },
+];
+
+/* Vize (žigovi u putovnici): rane su lake (prvi dan), kasnije traže tjedne. */
+const SEALS = [
+  { id: 'p1', t: 'Prvo pismo', g: '1', need: 1, ok: c => c.n >= 1 },
+  { id: 'cz', t: 'Čisti žig', g: '3/3', ok: c => c.perfect >= 1 },
+  { id: 'p3', t: 'Tri pisma', g: '3', need: 3, ok: c => c.n >= 3 },
+  { id: 'p7', t: 'Tjedan pisama', g: '7', need: 7, ok: c => c.n >= 7 },
+  { id: 'nau', t: 'Zapamćeno', g: '✓', ok: c => c.learned >= 1 },
+  { id: 'ned', t: 'Nedjeljna', g: 'N', ok: c => c.weeks >= 1 },
+];
+
+/* Činovi: bodovi dolaze od pisama (2), čistih žigova (+1) i zapamćenih pisama (+2), pa čin nagrađuje i pamćenje.
+   Isti popis koristi i server (build.py ga prepisuje u data/config.json), pa admin i obavijesti pokazuju isti čin. */
+const RANKS = [
+  { min: 0, name: 'Turistkinja' },
+  { min: 10, name: 'Putnica' },
+  { min: 25, name: 'Istraživačica' },
+  { min: 45, name: 'Pustolovka' },
+  { min: 70, name: 'Navigatorica' },
+  { min: 100, name: 'Kartografkinja' },
+  { min: 135, name: 'Veleposlanica' },
+  { min: 170, name: 'Građanka svijeta' },
+];
+const pointsOf = f => Object.values(f).reduce((p, s) => p + 2 + (s.r.every(Boolean) ? 1 : 0) + (s.due == null ? 2 : 0), 0);
+function rankInfo(p) {
+  let i = 0; RANKS.forEach((r, k) => { if (p >= r.min) i = k; });
+  const cur = RANKS[i], nx = RANKS[i + 1] || null;
+  return { i, name: cur.name, p, next: nx, pct: nx ? Math.round((p - cur.min) / (nx.min - cur.min) * 100) : 100 };
+}
+
+/* ============ STANJE (samo u ovom pregledniku) ============ */
+const KEY = 'jesi-znala-v2';
+const FXK = 'jesi-znala-fx';
+const BUILD = 'dev';
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+let FX = true; try { FX = localStorage.getItem(FXK) !== '0'; } catch (e) {}   // zadano uključeno, i uz smanjeno kretanje na uređaju
+document.documentElement.classList.toggle('fx', FX);
+const GAPS = [2, 5, 12];   // ponavljanje: za 2, pa 5, pa 12 dana; nakon trećeg točnog marka je zapamćena
+let S = { f: {}, days: {} };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.f) S = s; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} schedulePush(); };
+
+const DAY = 86400000, MONTHS = ['siječnja', 'veljače', 'ožujka', 'travnja', 'svibnja', 'lipnja', 'srpnja', 'kolovoza', 'rujna', 'listopada', 'studenoga', 'prosinca'];
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const startDate = () => { const [y, m, d] = START.split('-').map(Number); return new Date(y, m - 1, d); };
+const today = () => { const n = new Date(); return Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - startDate()) / DAY); };
+const unlocked = () => Math.max(1, Math.min(FACTS.length, today() + 1));
+const dateOf = t => { const d = startDate(); d.setDate(d.getDate() + t); return d; };
+const dmy = d => pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2);
+const longDate = d => d.getDate() + '. ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear() + '.';
+const no = i => pad(i + 1);
+const $ = id => document.getElementById(id);
+const plural = (n, one, few, many) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? one : m >= 2 && m <= 4 && (h < 12 || h > 14) ? few : many; };
+
+function streak() {
+  let d = new Date(), n = 0;
+  if (!S.days[ymd(d)]) d.setDate(d.getDate() - 1);
+  while (S.days[ymd(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+const played = i => S.f[i];
+const nextUnplayed = () => { const u = unlocked(); if (!played(u - 1)) return u - 1; for (let i = 0; i < u; i++) if (!played(i)) return i; return null; };
+const dueList = () => Object.keys(S.f).map(Number).filter(i => FACTS[i] && S.f[i].due != null && S.f[i].due <= today()).sort((a, b) => S.f[a].due - S.f[b].due);
+const questions = f => (f.num ? [] : [{ q: f.q, opts: f.opts, a: f.a }]).concat(f.quiz);
+function counts() { const v = Object.values(S.f); return { n: v.length, perfect: v.filter(s => s.r.every(Boolean)).length, learned: v.filter(s => s.due == null).length, weeks: Object.keys(S.week || {}).length }; }
+const earned = () => { const c = counts(); return SEALS.filter(s => s.ok(c)).map(s => s.id); };
+
+/* ============ CRTEŽI ============ */
+function motif(i) {
+  const f = FACTS[i], s = (i * 7 + 3) % 11;
+  let g = '';
+  if (f.cat === 'pov') {
+    for (let k = 0; k < 3; k++) { const x = 18 + k * 12, r = 32 - k * 12; g += '<path d="M' + x + ' 92V58a' + r + ' ' + r + ' 0 0 1 ' + r * 2 + ' 0V92"/>'; }
+    g += '<path d="M8 92h84"/>';
+  } else if (f.cat === 'geo') {
+    g = '<g transform="rotate(' + (s * 5 - 25) + ' 50 50)"><circle cx="50" cy="50" r="40"/><ellipse cx="50" cy="50" rx="15" ry="40"/><ellipse cx="50" cy="50" rx="29" ry="40"/><path d="M10 50h80M17 30h66M17 70h66"/></g>';
+  } else {
+    let h = (i + 1) * 2654435761 >>> 0;
+    for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) { h = (h ^ (h << 13)) >>> 0; h = (h ^ (h >>> 17)) >>> 0; h = (h ^ (h << 5)) >>> 0;
+      g += '<rect x="' + (9 + x * 17) + '" y="' + (9 + y * 17) + '" width="13" height="13"' + (h & 1 ? ' fill="currentColor"' : '') + '/>'; }
+  }
+  return '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">' + g + '</svg>';
+}
+function stamp(i, size) {
+  const f = FACTS[i], len = String(f.fig).length;
+  return '<span class="stamp-wrap ' + (size || '') + ' ' + f.cat + '"><span class="stamp"><span class="field">' + motif(i) +
+    '<span class="st-s"><span>' + CATS[f.cat] + '</span></span><span class="st-fig ' + (len <= 2 ? 'f2' : len === 3 ? 'f3' : '') + '">' + f.fig + (f.figu ? '<small>' + f.figu + '</small>' : '') + '</span>' +
+    '<span class="st-s"><span>Jesi znala</span><span>№ ' + no(i) + '</span></span></span></span></span>';
+}
+let pmId = 0;
+function postmark(i, thump) {
+  const st = S.f[i], id = ++pmId;
+  const waves = [24, 37, 50, 63].map(y => '<path d="M92 ' + y + 'q7 -6 14 0t14 0t14 0t14 0"/>').join('');
+  return '<svg class="pm' + (thump ? ' thump' : '') + '" viewBox="0 0 152 90" aria-hidden="true"><defs><path id="pa' + id + '" d="M17 45a28 28 0 0 1 56 0"/><path id="pb' + id + '" d="M10 45a35 35 0 0 0 70 0"/></defs>' +
+    '<g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="45" cy="45" r="41"/><circle cx="45" cy="45" r="21"/>' + waves + '</g>' +
+    '<g fill="currentColor" font-size="8.5" font-weight="700" letter-spacing="1"><text><textPath href="#pa' + id + '" startOffset="50%" text-anchor="middle">JESI ZNALA</textPath></text>' +
+    '<text><textPath href="#pb' + id + '" startOffset="50%" text-anchor="middle">' + dmy(new Date(st.d)) + '</textPath></text>' +
+    '<text x="45" y="50" text-anchor="middle" font-size="15" letter-spacing="0">' + st.r.filter(Boolean).length + '/3</text></g></svg>';
+}
+function sheet(i, fresh) {
+  const f = FACTS[i];
+  return '<article class="sheet' + (fresh ? ' unfold' : '') + '"><div class="sheet-h"><span class="rcv">Primljeno<br>' + dmy(dateOf(i)) + '</span><span class="date">Pismo № ' + no(i) + '<br>' + longDate(dateOf(i)) + '</span></div><p class="hand">Jesi znala?</p><h2>' + f.title + '</h2><p>' + f.story + '</p>' +
+    (f.note ? '<p class="hand sm">' + f.note + '</p>' : '') + (fresh ? '<p class="hand sm">P.S. Slijede tri pitanja.</p>' : '') + '</article>';
+}
+
+/* ============ ZASLONI ============ */
+let V = { name: 'home' };
+function go(name, data, anim = true) { V = Object.assign({ name }, data); paint(anim); window.scrollTo(0, 0); }
+function paint(anim) {
+  const el = $('view');
+  el.innerHTML = VIEWS[V.name]();
+  el.className = 'view' + (anim ? ' anim' : '');
+  [...el.children].forEach((c, i) => c.style.setProperty('--i', i));
+  tick();
+}
+const envTop = (i, marked) => '<span class="env-top"><span class="avion">Par avion<br>Zračnom poštom</span><span class="env-stamp">' + (marked ? postmark(i) : '') + stamp(i, 'sm') + '</span></span>';
+const WA = 'https://wa.me/?text=';
+const ASK_MORE = 'Sandučić mi je prazan. Piši mi novo pismo!';
+
+const VIEWS = {
+  home() {
+    const u = unlocked(), nx = nextUnplayed(), t = u - 1, due = dueList(), c = counts(), s = streak(), have = earned();
+    let h = '<header class="head"><h1 class="title">Jesi znala?</h1>' + (s > 1 ? '<span class="hand-s">' + s + '. dan zaredom</span>' : '') + '</header>';
+    if (nx != null) {
+      h += '<button class="env" data-act="open" data-i="' + nx + '" aria-label="Otvori pismo">' + envTop(nx) + '<span class="addr"><span>Za tebe,</span><span>' + FACTS[nx].q + '</span></span></button>' +
+        '<p class="say">' + (nx !== t ? 'Ovo pismo čeka od ' + longDate(dateOf(nx)) + ' Stara pošta ne propada, otvori je kad stigneš.' : c.n ? 'Stiglo je danas. Odgovor na pitanje s omotnice čeka unutra.' : 'Svaki dan stigne jedno pismo. Pročitaš ga, odgovoriš na tri pitanja i marka je tvoja.') + '</p>' +
+        '<button class="btn" data-act="open" data-i="' + nx + '">Otvori pismo</button>';
+    } else {
+      const more = today() + 1 < FACTS.length;
+      h += '<div class="env">' + envTop(t, true) + '<span class="addr"><span>' + (more ? 'To je sve za danas.' : 'Sandučić je prazan.') + '</span><span>' + (more ? 'Novo pismo za <b class="count" id="count">--:--:--</b>' : 'Novo stiže čim ga netko napiše.') + '</span></span></div>';
+      h += more ? '<p class="say">Sutra stiže pismo iz ' + CATS_GEN[FACTS[today() + 1].cat] + '.</p>'
+        : '<p class="say">Pročitala si sva pisma. Javi pošiljatelju da čekaš sljedeće.</p><div class="share-row"><a class="btn" target="_blank" rel="noopener" href="' + WA + encodeURIComponent(ASK_MORE) + '">Zatraži na WhatsAppu</a><button class="btn alt" data-act="copyask">Kopiraj poruku</button></div>';
+    }
+    if (weeklyReady()) h += '<button class="slip week" data-act="weekly"><span><b>Nedjeljna razglednica</b>Pet pitanja iz cijelog albuma, za kraj tjedna.</span><u>Kreni ›</u></button>';
+    if (due.length) h += '<button class="slip" data-act="review"><span><b>Sjećaš li se?</b>' + due.length + ' ' + plural(due.length, 'stara marka ima', 'stare marke imaju', 'starih maraka ima') + ' po jedno pitanje za tebe.</span><u>Ponovi ›</u></button>';
+
+    const rk = rankInfo(pointsOf(S.f)), left = rk.next ? rk.next.min - rk.p : 0;
+    const mrz = t => t.toUpperCase().replace(/[ČĆ]/g, 'C').replace(/Š/g, 'S').replace(/Ž/g, 'Z').replace(/Đ/g, 'D').replace(/[^A-Z0-9]+/g, '<');
+    const fill36 = t => (t + '<'.repeat(36)).slice(0, 36).replace(/</g, '&lt;');
+    const VC = ['var(--red)', 'var(--pen)', 'var(--geo)'], VA = [-9, 6, -4];
+    h += '<section class="pass" aria-label="Putovnica"><div class="pass-cover"><svg class="pass-emblem" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="20" cy="20" r="15"/><ellipse cx="20" cy="20" rx="6.5" ry="15"/><path d="M5 20h30M8 12h24M8 28h24"/></svg>' +
+      '<div><div class="pass-t">Putovnica</div><div class="pass-s">Jesi znala?</div></div><div class="pass-n">Čin<br>' + (rk.i + 1) + ' / ' + RANKS.length + '</div></div>' +
+      '<div class="pass-page"><div class="pass-grid"><div><small>Čin</small><span class="rk-name">' + rk.name + '</span></div><div><small>' + plural(rk.p, 'Bod', 'Boda', 'Bodova') + '</small><span class="rk-pts">' + rk.p + '</span></div></div>' +
+      '<div class="rk-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + rk.pct + '"><i style="width:' + rk.pct + '%"></i></div>' +
+      '<p class="rk-next">' + (rk.next ? 'Još ' + left + ' ' + plural(left, 'bod', 'boda', 'bodova') + ' do čina „' + rk.next.name + '”. ' : 'Najviši čin. ') + 'Pismo vrijedi 2 boda, čisti žig +1, zapamćeno +2.</p>' +
+      '<ul class="visas">' + SEALS.map((x, k) => '<li' + (have.includes(x.id) ? ' class="on" style="--vc:' + VC[k % 3] + ';--va:' + VA[k % 3] + 'deg"' : '') + '><span class="vz">' + x.g + '</span>' + x.t + '</li>').join('') + '</ul>' +
+      '<div class="mrz" aria-hidden="true"><span>' + fill36('P<JZN<<' + mrz(rk.name)) + '</span><span>' + fill36(String(rk.p).padStart(5, '0') + '<BODOVA<' + String(c.n).padStart(3, '0') + '<PISAMA') + '</span></div></div></section>';
+    h += '<section class="book"><div class="book-h"><h2>Album</h2><span>' + c.n + ' / ' + FACTS.length + '</span></div><div class="grid">';
+    FACTS.forEach((f, i) => {
+      const st = S.f[i];
+      if (st) { const n = st.r.filter(Boolean).length; h += '<button class="cell" data-act="open" data-i="' + i + '" aria-label="' + f.title + '">' + stamp(i, 'sm') + '<span class="sc' + (n === 3 ? ' full' : '') + '">' + (st.due == null ? 'zapamćeno' : n + '/3') + '</span></button>'; }
+      else if (i < u) h += '<button class="cell empty wait" data-act="open" data-i="' + i + '" aria-label="Neotvoreno pismo ' + no(i) + '"><span>' + no(i) + '<small>čeka</small></span></button>';
+      else h += '<span class="cell empty">' + no(i) + '</span>';
+    });
+    const nextSeal = SEALS.find(x => x.need && !have.includes(x.id));
+    h += '</div><p class="goal">' + (nextSeal ? 'Još <b>' + (nextSeal.need - c.n) + ' ' + plural(nextSeal.need - c.n, 'pismo', 'pisma', 'pisama') + '</b> do vize „' + nextSeal.t + '”.'
+      : c.n < FACTS.length ? 'Još <b>' + (FACTS.length - c.n) + '</b> do pune stranice albuma.' : 'Stranica je puna. Zapamćeno: <b>' + c.learned + ' / ' + FACTS.length + '</b>.') + '</p></section>';
+    h += '<footer class="foot"><span class="ver">verzija ' + BUILD + ' · kretanje: ' + (reducedMotion() ? (FX ? 'smanjeno, efekt uključen' : 'smanjeno na uređaju') : 'puno') + '</span>' + (reducedMotion() ? '<button data-act="fx">Efekt otvaranja: ' + (FX ? 'uključen' : 'uključi') + '</button>' : '') + (API ? '<button data-act="syncview">Sinkronizacija' + (SY.code ? ' ✓' : '') + '</button>' : '') + '<button data-act="snd">Zvuk: ' + (sndOn() ? 'uključen' : 'isključen') + '</button>' + (V.ask ? '<button data-act="wipe">Da, obriši sve</button><button data-act="noask">Odustani</button>' : c.n ? '<button data-act="ask">Obriši napredak</button>' : '') + '</footer>';
+    return h;
+  },
+
+  play() {
+    const f = FACTS[V.i], step = V.step;
+    if (step === 0) return '<button class="back" data-act="home">‹ natrag</button>' + sheet(V.i, true) + '<div class="dock"><button class="btn" id="main" data-act="main">Odgovori na pitanja</button></div>';
+    const item = step === 1 ? f : f.quiz[step - 2], isNum = step === 1 && f.num;
+    let body;
+    if (isNum) {
+      const m = f.num, v = Math.round((m.min + m.max) / 2 / m.step) * m.step;
+      body = '<div class="num" id="num"><output id="numv" for="rng">' + v + m.unit + '</output><input id="rng" type="range" min="' + m.min + '" max="' + m.max + '" step="' + m.step + '" value="' + v + '" aria-label="Tvoj odgovor">' +
+        '<div class="ends"><span>' + m.min + m.unit + '</span><span>' + m.max + m.unit + '</span></div></div>';
+    } else body = optsHtml(item);
+    return '<button class="back" data-act="home">‹ natrag</button><section class="card ' + f.cat + '"><div class="card-h"><span>Dopisnica za odgovor</span><span>' + step + ' / 3</span></div><h2 class="q">' + item.q + '</h2>' + body + '</section>' +
+      '<div id="reveal" style="display:contents"></div><div class="dock"><button class="btn" id="main" data-act="main"' + (isNum ? '>Potvrdi' : ' disabled>Označi odgovor') + '</button></div>';
+  },
+
+  result() {
+    const f = FACTS[V.i], st = S.f[V.i], n = st.r.filter(Boolean).length, nx = nextUnplayed(), left = st.due == null ? 0 : st.due - today();
+    const big = ['Sad znaš', 'Jedno od tri', 'Dva od tri', 'Sve točno!'][n];
+    const when = st.due == null ? 'Ovo si zapamtila, više te neće pitati.' : left <= 0 ? 'Ova marka ima pitanje za tebe.' : 'Marka je u albumu. Za ' + left + ' ' + plural(left, 'dan', 'dana', 'dana') + ' pitat će te sjećaš li se.';
+    const qs = [{ q: f.q, ok: st.r[0], ans: f.num ? (f.num.real || f.num.a + f.num.unit) : f.opts[f.a] }, ...f.quiz.map((q, k) => ({ q: q.q, ok: st.r[k + 1], ans: q.opts[q.a] }))];
+    const t = encodeURIComponent(shareText()), a = '<a class="btn alt" target="_blank" rel="noopener" href="';
+    return '<button class="back" data-act="home">‹ album</button>' +
+      '<div class="frank' + (V.fresh ? ' fresh' : '') + '">' + postmark(V.i, V.fresh) + stamp(V.i, 'lg') + '<span class="big">' + big + '</span></div>' +
+      (V.rankUp ? '<p class="won">Novi čin: ' + V.rankUp + '!</p>' : '') + (V.won && V.won.length ? '<p class="won">Nova viza: ' + V.won.join(', ') + '!</p>' : '') + '<p class="say">' + when + '</p>' +
+      '<ul class="recap">' + qs.map(x => '<li class="' + (x.ok ? 'y' : 'n') + '"><i>' + (x.ok ? '✓' : '✗') + '</i><div>' + x.q + '<span>' + x.ans + '</span></div></li>').join('') + '</ul>' +
+      '<div class="share"><span class="lbl">Javi kako ti je išlo</span><div class="share-row">' + a + WA + t + '">WhatsApp</a>' + a + 'https://twitter.com/intent/tweet?text=' + t + '">X</a><button class="btn alt" data-act="copy">Kopiraj</button></div></div>' +
+      sheet(V.i, false) +
+      '<div class="dock">' + (nx != null ? '<button class="btn" data-act="open" data-i="' + nx + '">Sljedeće pismo</button>' : '<button class="btn" data-act="home">U album</button>') + '</div>';
+  },
+
+  review() {
+    const it = V.queue[V.pos], f = FACTS[it.i], q = questions(f)[it.qi];
+    return '<button class="back" data-act="home">‹ natrag</button><div class="rv">' + stamp(it.i, 'sm') + '<span>' + (V.weekly ? 'Nedjeljna razglednica.<br>Pitanja iz cijelog albuma.' : 'Ovu si marku skupila ' + longDate(new Date(S.f[it.i].d)) + '<br>Sjećaš li se još?') + '</span></div>' +
+      '<section class="card ' + f.cat + '"><div class="card-h"><span>' + f.title + '</span><span>' + (V.pos + 1) + ' / ' + V.queue.length + '</span></div><h2 class="q">' + q.q + '</h2>' + optsHtml(q) + '</section>' +
+      '<div id="reveal" style="display:contents"></div><div class="dock"><button class="btn" id="main" data-act="main" disabled>Označi odgovor</button></div>';
+  },
+
+  open() { return '<div class="opening" data-act="skip" role="button" aria-label="Preskoči">' + openingEnvelope(V.i) + '<p class="hand-s ohint">dodirni za preskok</p></div>'; },
+
+  sync() {
+    const base = location.origin + '/';
+    let h = '<button class="back" data-act="home">‹ natrag</button><section class="card"><div class="card-h"><span>Sinkronizacija</span><span>' + (SY.code ? 'povezano' : 'isključeno') + '</span></div>';
+    if (!SY.code) {
+      h += '<p class="say">Spaja mobitel i laptop da napredak bude isti svugdje. Dobiješ i link kojim netko može pratiti napredak, samo pregled.</p><div class="stack"><button class="btn" data-act="syncon">Uključi</button>' +
+        '<label class="lbl" for="codeIn">Već imaš kod?</label><input id="codeIn" class="code-in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="kod s drugog uređaja"><button class="btn alt" data-act="syncjoin">Spoji</button></div>';
+    } else {
+      h += '<div class="stack"><p class="say">' + (SY.err ? '' : SY.last ? 'Zadnja sinkronizacija u ' + pad(SY.last.getHours()) + ':' + pad(SY.last.getMinutes()) + '.' : 'Povezano.') + '</p>' +
+        '<span class="lbl">Link za drugi uređaj</span><code class="lnk">' + base + '#sync=' + SY.code + '</code><button class="btn alt" data-act="copylink" data-t="' + base + '#sync=' + SY.code + '">Kopiraj</button>' +
+        (SY.watch ? '<span class="lbl">Link za praćenje (samo pregled)</span><code class="lnk">' + base + '#watch=' + SY.watch + '</code><button class="btn alt" data-act="copylink" data-t="' + base + '#watch=' + SY.watch + '">Kopiraj</button>' : '') +
+        '<button class="back" data-act="syncoff">Prekini vezu na ovom uređaju</button></div>';
+    }
+    return h + (SY.err ? '<p class="msg" style="padding-bottom:14px">' + SYMSG[SY.err] + '</p>' : '') + '</section>';
+  },
+
+  watch() {
+    const d = V.data, h = '<button class="back" data-act="home">‹ natrag</button>';
+    if (!d) return h + '<p class="say">' + (V.err ? 'Ne mogu učitati. Provjeri link.' : 'Učitavam…') + '</p>';
+    return h + '<section class="card"><div class="card-h"><span>Praćenje, samo pregled</span><span>' + d.n + ' / ' + d.total + '</span></div>' +
+      '<p class="say" style="padding:0 4px 6px">Čin: <b>' + esc(d.rank || '-') + '</b> · ' + (d.points | 0) + ' bodova</p>' +
+      '<div class="kv"><div><b>' + d.streak + '</b><span>dana zaredom</span></div><div><b>' + d.perfect + '</b><span>čistih žigova</span></div><div><b>' + d.learned + '</b><span>zapamćeno</span></div></div></section>' +
+      '<p class="say">' + (d.last ? 'Zadnja aktivnost: ' + d.last.split('-').reverse().join('.') + '.' : 'Još nema aktivnosti.') + '</p>' +
+      '<ul class="recap">' + d.letters.slice().reverse().map(l => '<li class="' + (l.score === 3 ? 'y' : '') + '"><i>' + (l.score === 3 ? '✓' : '·') + '</i><div>№ ' + pad((l.i | 0) + 1) + ' ' + esc(l.title) + '<span>' + (l.score | 0) + '/3' + (l.learned ? ' · zapamćeno' : '') + (l.d ? ' · ' + esc(l.d).split('-').reverse().join('.') : '') + '</span></div></li>').join('') + '</ul>';
+  },
+
+  reviewEnd() {
+    const all = V.queue.length, r = V.right;
+    return '<div class="end"><p class="hand">' + r + ' od ' + all + '</p><p class="say">' + (V.weekly ? weekSay() : r === all ? 'Sve si zapamtila. Te marke idu korak bliže oznaci „zapamćeno”.' : 'Što si znala ide korak dalje. Ostalo te pita opet sutra, uz podsjetnik.') + '</p>' +
+      (V.rankUp ? '<p class="won" style="align-self:center">Novi čin: ' + V.rankUp + '!</p>' : '') + (V.won && V.won.length ? '<p class="won" style="align-self:center">Nova viza: ' + V.won.join(', ') + '!</p>' : '') + '</div><div class="dock"><button class="btn" data-act="home">U album</button></div>';
+  }
+};
+
+function optsHtml(item) {
+  return '<div class="opts" id="opts">' + item.opts.map((o, k) => '<button class="opt" data-act="pick" data-k="' + k + '"><span class="box"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M5 16l7 8L26 4"/></svg></span><span class="txt">' + o + '</span></button>').join('') + '</div>';
+}
+function markOpts(pick, a) {
+  [...$('opts').children].forEach((b, k) => { b.disabled = true;
+    if (k === pick) b.classList.add('picked');
+    if (k === a) b.classList.add('right'); else if (k === pick) b.classList.add('wrong'); else b.classList.add('dim'); });
+}
+function reveal(html, label) {
+  const r = $('reveal'); r.innerHTML = html; [...r.children].forEach((c, i) => { c.classList.add('pop'); c.style.setProperty('--i', i + 4); });
+  const m = $('main'); m.disabled = false; m.textContent = label;
+  const v = r.firstElementChild;
+  if (v) setTimeout(() => v.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' }), 60);
+}
+const NEXT = ['Dalje', 'Zadnje pitanje', 'Zalijepi marku'];
+const PRAISE = ['Točno!', 'Tako je!', 'Bravo!', 'Znala si!'];
+const marg = (ok, txt) => '<p class="marg ' + (ok ? 'y' : 'n') + '">' + txt + '</p>';
+
+function pick(k) {
+  if (V.answered) return;
+  if (V.name === 'play') {
+    const f = FACTS[V.i], item = V.step === 1 ? f : f.quiz[V.step - 2], ok = k === item.a;
+    V.answered = true; V.r[V.step - 1] = ok; markOpts(k, item.a); feedback(ok);
+    reveal(marg(ok, ok ? PRAISE[(V.i + V.step) % PRAISE.length] : 'Nije. Zaokruženo je točno.'), NEXT[V.step - 1]);
+  } else if (V.name === 'review') {
+    const it = V.queue[V.pos], f = FACTS[it.i], q = questions(f)[it.qi], ok = k === q.a, st = S.f[it.i];
+    V.answered = true; markOpts(k, q.a); if (ok) V.right++; feedback(ok);
+    if (!V.weekly) st.rev = (st.rev || 0) + 1;
+    if (V.weekly) {} else if (ok) { st.box++; st.due = st.box >= GAPS.length ? null : today() + GAPS[st.box]; } else { st.box = 0; st.due = today() + 1; }
+    S.days[ymd(new Date())] = 1; save();
+    reveal(marg(ok, ok ? (st.due == null && !V.weekly ? 'Zapamćeno!' : 'Sjećaš se!') : 'Evo podsjetnika:') + (ok ? '' : sheet(it.i, false)), V.pos + 1 < V.queue.length ? 'Dalje' : 'Završi');
+  }
+}
+function confirmNum() {
+  const f = FACTS[V.i], m = f.num, v = +$('rng').value, diff = Math.abs(v - m.a), ok = diff <= m.tol;
+  V.answered = true; V.r[0] = ok; setTimeout(ok ? SND.bell : SND.scratch, 180);
+  const pos = x => ((x - m.min) / (m.max - m.min) * 100).toFixed(1) + '%';
+  $('num').outerHTML = '<div class="scale" id="num"><span class="pin you" style="left:' + pos(v) + '">ti: ' + v + m.unit + '</span><span class="pin real" style="left:' + pos(m.a) + '">' + (m.real || m.a + m.unit) + '</span></div>';
+  reveal(marg(ok, diff === 0 ? 'U sridu!' : ok ? 'Dovoljno blizu, računa se!' : 'Fulala si za ' + diff + m.du + '.'), NEXT[0]);
+}
+function main() {
+  if (V.name === 'play') {
+    if (V.step === 0) return go('play', { i: V.i, step: 1, r: [], answered: false });
+    if (!V.answered) return confirmNum();
+    if (V.step < 3) return go('play', { i: V.i, step: V.step + 1, r: V.r, answered: false });
+    const before = earned(), rank0 = rankInfo(pointsOf(S.f)).i;
+    S.f[V.i] = { r: V.r, d: ymd(new Date()), box: 0, due: today() + GAPS[0], rev: 0 };
+    S.days[ymd(new Date())] = 1; save();
+    setTimeout(SND.thud, 520);
+    const rank1 = rankInfo(pointsOf(S.f)); if (rank1.i > rank0) setTimeout(SND.bell, 1200);
+    go('result', { i: V.i, fresh: true, rankUp: rank1.i > rank0 ? rank1.name : null, won: SEALS.filter(s => !before.includes(s.id) && earned().includes(s.id)).map(s => s.t) });
+  } else if (V.name === 'review') {
+    if (V.pos + 1 < V.queue.length) return go('review', { queue: V.queue, pos: V.pos + 1, right: V.right, before: V.before, rank0: V.rank0, weekly: V.weekly, answered: false });
+    if (V.weekly) { S.week = S.week || {}; S.week[ymd(new Date())] = { r: V.right, n: V.queue.length }; save(); }
+    const rk1 = rankInfo(pointsOf(S.f)); if (rk1.i > V.rank0) setTimeout(SND.bell, 300);
+    go('reviewEnd', { queue: V.queue, right: V.right, weekly: V.weekly, rankUp: rk1.i > V.rank0 ? rk1.name : null, won: SEALS.filter(s => !V.before.includes(s.id) && earned().includes(s.id)).map(s => s.t) });
+  }
+}
+function startReview() {
+  const queue = dueList().slice(0, 5).map(i => { const st = S.f[i], qs = questions(FACTS[i]), off = FACTS[i].num ? 1 : 0;
+    let qi = st.rev ? st.rev % qs.length : st.r.findIndex((ok, k) => !ok && k >= off) - off; if (qi < 0) qi = 0; return { i, qi }; });
+  if (queue.length) go('review', { queue, pos: 0, right: 0, before: earned(), rank0: rankInfo(pointsOf(S.f)).i, answered: false });
+}
+/* ============ SERVER (samo u samostalnoj aplikaciji; u pregledu na claude.ai je isključen) ============ */
+const API = !!window.__API__;
+const SYK = 'jesi-znala-sync';
+let SY = { code: null, watch: null, last: null, err: null };
+try { const o = JSON.parse(localStorage.getItem(SYK)); if (o && o.code) { SY.code = o.code; SY.watch = o.watch || null; } } catch (e) {}
+const saveSY = () => { try { localStorage.setItem(SYK, JSON.stringify({ code: SY.code, watch: SY.watch })); } catch (e) {} };
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// pisma s poslužitelja unose se kao HTML, pa se tekst prije toga escapira (admin ne smije slučajno razbiti stranicu)
+const deepEsc = v => typeof v === 'string' ? v.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) : Array.isArray(v) ? v.map(deepEsc) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepEsc(x)])) : v;
+const rnd = n => { const A = 'abcdefghjkmnpqrstuvwxyz23456789', b = new Uint8Array(n); crypto.getRandomValues(b); return Array.from(b, x => A[x % A.length]).join(''); };
+const localOnly = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+async function api(method, path, body) {
+  const r = await fetch(path, { method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
+  let j = null; try { j = await r.json(); } catch (e) {}
+  return { ok: r.ok, status: r.status, j };
+}
+let pushT = 0, busy = false;
+function schedulePush() { if (!API || !SY.code) return; clearTimeout(pushT); pushT = setTimeout(pushNow, 1200); }
+async function pushNow() {
+  if (!API || !SY.code) return;
+  if (busy) return schedulePush();
+  busy = true;
+  try {
+    const r = await api('POST', '/api/progress', { code: SY.code, watch: SY.watch, state: { f: S.f, days: S.days, week: S.week || {} } });
+    if (r.ok && r.j && r.j.state) {
+      const m = r.j.state; S = { f: m.f || {}, days: m.days || {}, week: m.week || {}, snd: S.snd }; localOnly();
+      if (r.j.watch && r.j.watch !== SY.watch) { SY.watch = r.j.watch; saveSY(); }
+      SY.err = null; SY.last = new Date();
+    } else SY.err = r.status === 503 ? 'nostore' : 'fail';
+  } catch (e) { SY.err = 'fail'; }
+  busy = false;
+  if (V.name === 'home' || V.name === 'sync') paint(false);
+}
+async function syncOn() {
+  SY = { code: rnd(16), watch: rnd(16), last: null, err: null };
+  await pushNow();
+  if (SY.err) { const e = SY.err; SY = { code: null, watch: null, last: null, err: e }; }
+  saveSY(); paint(false);
+}
+async function syncJoin() {
+  const code = ($('codeIn').value || '').trim().toLowerCase();
+  if (!/^[a-z0-9]{12,32}$/.test(code)) { SY.err = 'badcode'; return paint(false); }
+  let r; try { r = await api('GET', '/api/progress?code=' + code); } catch (e) { SY.err = 'fail'; return paint(false); }
+  if (!r.ok) { SY.err = r.status === 404 ? 'badcode' : r.status === 503 ? 'nostore' : 'fail'; return paint(false); }
+  SY = { code, watch: r.j.watch || null, last: null, err: null }; saveSY();
+  await pushNow(); paint(false);
+}
+function syncOff() { SY = { code: null, watch: null, last: null, err: null }; saveSY(); paint(false); }
+async function loadWatch(code) {
+  try { const r = await api('GET', '/api/progress?watch=' + code); if (r.ok) V.data = r.j; else V.err = true; } catch (e) { V.err = true; }
+  if (V.name === 'watch') paint(false);
+}
+function initSync() {
+  if (!API) return;
+  const m = /^#(sync|watch)=([a-z0-9]{12,32})$/.exec(location.hash);
+  if (m) {
+    history.replaceState(null, '', location.pathname + location.search);
+    if (m[1] === 'watch') { go('watch', { data: null, err: false }, false); loadWatch(m[2]); }
+    else { SY = { code: m[2], watch: null, last: null, err: null }; saveSY(); }
+  }
+  fetch('/api/facts').then(r => r.json()).then(j => {
+    if (Array.isArray(j) && j.length >= FACTS.length && j.every(x => x && x.title && x.story && x.cat && Array.isArray(x.quiz) && x.quiz.length === 2)) { FACTS = j.map(deepEsc); if (V.name === 'home') paint(false); }
+  }).catch(() => {});
+  if (SY.code) pushNow();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && SY.code) pushNow(); });
+}
+const SYMSG = { nostore: 'Server još nema bazu podataka. Uključi je u Vercelu (Storage), pa probaj opet.', fail: 'Server trenutno nije dostupan. Probaj malo kasnije.', badcode: 'Taj kod ne postoji. Provjeri je li točno prepisan.' };
+
+/* Otvaranje pisma nožem: nož zareže gornji rub, traka odleti, pismo se izvuče, pa se prikaže pismo. */
+function openingEnvelope(i) {
+  const pts = []; for (let x = 0; x <= 100; x += 5) pts.push([x, 16 + ((x / 5) % 2 ? 2.5 : -1.5)]);
+  const edge = pts.map(q => q[0] + '% ' + q[1] + 'px'), back = edge.slice().reverse();
+  const face = '<span class="addr"><span>Za tebe,</span><span>' + FACTS[i].q + '</span></span>';
+  const knife = '<svg class="knife" viewBox="0 0 160 40" aria-hidden="true"><defs><linearGradient id="kb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F6F9"/><stop offset=".5" stop-color="#B8C0CB"/><stop offset="1" stop-color="#8B94A1"/></linearGradient><linearGradient id="kh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7C66F"/><stop offset="1" stop-color="#A4782A"/></linearGradient></defs>' +
+    '<g transform="translate(160 0) scale(-1 1)"><path d="M2 20 L96 14.5 Q132 16 134 20 Q132 24 96 25.5 Z" fill="url(#kb)"/><path d="M2 20 L134 20" stroke="#FFF" stroke-opacity=".7" stroke-width=".8"/>' +
+    '<path d="M128 13 h20 q10 0 10 7 q0 7 -10 7 h-20 z" fill="url(#kh)"/><circle cx="150" cy="20" r="3.2" fill="#6E4F16" fill-opacity=".55"/><path d="M128 13 v14" stroke="#7A5A1C" stroke-width="2"/></g></svg>';
+  return '<div class="oenv"><div class="oletter">Jesi znala?<i></i><i></i><i></i></div>' +
+    '<div class="env oc bot" style="clip-path:polygon(' + edge.join(',') + ',100% 100%,0 100%)">' + envTop(i) + face + '</div>' +
+    '<div class="env oc top" style="clip-path:polygon(0 0,100% 0,' + back.join(',') + ')">' + envTop(i) + face + '</div>' +
+    '<span class="cutline"></span>' + knife + '</div>';
+}
+function openLetter(i) {
+  ac();                                                    // zvuk se mora otključati unutar dodira
+  if (reducedMotion() && !FX) return go('play', { i, step: 0, r: [], answered: false });
+  go('open', { i }, false);
+  const at = (ms, fn) => setTimeout(fn, ms);
+  V.timers = [at(450, SND.slice), at(1300, SND.rip), at(1650, SND.paper), at(2300, () => { const o = document.querySelector('.opening'); if (o) o.classList.add('leave'); }), at(2550, finishOpen)];
+}
+function finishOpen() {
+  if (V.name !== 'open') return;
+  (V.timers || []).forEach(clearTimeout);
+  go('play', { i: V.i, step: 0, r: [], answered: false });
+}
+
+/* Nedjeljna razglednica: jednom tjedno pet pitanja iz cijelog albuma. Ne dira raspored ponavljanja. */
+function isSunday() { return new Date().getDay() === 0; }
+function weeklyReady() { return isSunday() && Object.keys(S.f).length >= 3 && !(S.week && S.week[ymd(new Date())]); }
+function startWeekly() {
+  const all = [];
+  Object.keys(S.f).map(Number).forEach(i => questions(FACTS[i]).forEach((q, qi) => all.push({ i, qi, k: Math.random() })));
+  all.sort((a, b) => a.k - b.k);
+  const queue = [], seen = {};
+  all.forEach(x => { if (queue.length < 5 && !seen[x.i]) { seen[x.i] = 1; queue.push(x); } });
+  all.forEach(x => { if (queue.length < 5 && !queue.includes(x)) queue.push(x); });
+  go('review', { queue, pos: 0, right: 0, before: earned(), rank0: rankInfo(pointsOf(S.f)).i, weekly: true, answered: false });
+}
+function weekSay() {
+  const lim = new Date(); lim.setDate(lim.getDate() - 6);
+  const n = Object.values(S.f).filter(s => s.d >= ymd(lim)).length, t = Object.keys(S.f).length;
+  return 'Tjedan je gotov. Otvorila si ' + n + ' ' + plural(n, 'pismo', 'pisma', 'pisama') + ', a u albumu ' + plural(t, 'je', 'su', 'je') + ' ' + t + ' ' + plural(t, 'marka', 'marke', 'maraka') + '. Vidimo se iduće nedjelje.';
+}
+
+/* Zvuk: sve je sintetizirano u pregledniku, bez datoteka. */
+let AC = null;
+const sndOn = () => S.snd !== false;
+function ac() { if (!sndOn()) return null; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; } catch (e) { return null; } }
+function noise(a, dur, freq, q, gain, when = 0, sweep) {
+  const n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(), t = a.currentTime + when;
+  src.buffer = buf; f.type = 'bandpass'; f.frequency.setValueAtTime(freq, t); if (sweep) f.frequency.exponentialRampToValueAtTime(sweep, t + dur); f.Q.value = q;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(a.destination); src.start(t); src.stop(t + dur);
+}
+function tone(a, type, f0, f1, dur, gain, when = 0) {
+  const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + when;
+  o.type = type; o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur);
+}
+const SND = {
+  key() { const a = ac(); if (!a) return; noise(a, .035, 2600, 1.2, .5); tone(a, 'square', 180, 90, .03, .12); },          // tipka pisaćeg stroja
+  paper() { const a = ac(); if (!a) return; noise(a, .32, 900, .7, .22, 0, 3200); noise(a, .2, 2400, .8, .12, .16, 1200); }, // šuštanje papira
+  thud() { const a = ac(); if (!a) return; tone(a, 'sine', 140, 45, .2, .7); noise(a, .06, 500, .6, .5); },                 // udarac žiga
+  bell() { const a = ac(); if (!a) return; tone(a, 'sine', 2093, 0, .9, .16); tone(a, 'sine', 4186, 0, .5, .05); },         // zvonce stroja
+  slice() { const a = ac(); if (!a) return; noise(a, .8, 3200, .8, .22, 0, 1500); noise(a, .8, 6200, 2, .05, 0, 3000); },                  // nož reže rub omotnice
+  rip() { const a = ac(); if (!a) return; noise(a, .2, 5200, .5, .42, 0, 1800); noise(a, .14, 2200, 1, .3, .07); tone(a, 'sine', 900, 300, .05, .05); }, // odlomljena traka
+  scratch() { const a = ac(); if (!a) return; noise(a, .07, 1500, 2, .25); noise(a, .09, 1100, 2, .25, .09); },             // križanje olovkom
+};
+function feedback(ok) { SND.key(); setTimeout(ok ? SND.bell : SND.scratch, 180); }
+
+function shareText() {
+  const f = FACTS[V.i], r = S.f[V.i].r, s = streak();
+  return 'Jesi znala? Pismo № ' + no(V.i) + ': ' + f.title + '\n' + r.map(x => x ? '🟩' : '🟥').join('') + ' ' + r.filter(Boolean).length + '/3' + (s > 1 ? ' · ' + s + '. dan zaredom' : '') + '\nČin: ' + rankInfo(pointsOf(S.f)).name;
+}
+function copy(b, txt) {
+  const done = ok => { b.textContent = ok ? 'Kopirano' : 'Nije uspjelo'; };
+  try { navigator.clipboard.writeText(txt).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+}
+function tick() {
+  const el = $('count'); if (!el) return;
+  const n = new Date(), t = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1) - n;
+  el.textContent = pad(Math.floor(t / 3600000)) + ':' + pad(Math.floor(t / 60000) % 60) + ':' + pad(Math.floor(t / 1000) % 60);
+}
+
+$('view').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act, bottom = () => window.scrollTo(0, document.body.scrollHeight);
+  if (a === 'open') { const i = +b.dataset.i; played(i) ? go('result', { i }) : openLetter(i); }
+  else if (a === 'skip') finishOpen();
+  else if (a === 'fx') { FX = !FX; try { localStorage.setItem(FXK, FX ? '1' : '0'); } catch (e) {} document.documentElement.classList.toggle('fx', FX); go('home', {}, false); bottom(); }
+  else if (a === 'pick') pick(+b.dataset.k);
+  else if (a === 'main') { SND.key(); main(); }
+  else if (a === 'home') go('home');
+  else if (a === 'review') startReview();
+  else if (a === 'weekly') startWeekly();
+  else if (a === 'syncview') go('sync');
+  else if (a === 'syncon') syncOn();
+  else if (a === 'syncjoin') syncJoin();
+  else if (a === 'syncoff') syncOff();
+  else if (a === 'copylink') copy(b, b.dataset.t);
+  else if (a === 'snd') { S.snd = !sndOn(); save(); SND.key(); go('home', {}, false); bottom(); }
+  else if (a === 'copy') copy(b, shareText());
+  else if (a === 'copyask') copy(b, ASK_MORE);
+  else if (a === 'ask') { go('home', { ask: true }, false); bottom(); }
+  else if (a === 'noask') { go('home', {}, false); bottom(); }
+  else if (a === 'wipe') { SY = { code: null, watch: null, last: null, err: null }; saveSY(); S = { f: {}, days: {} }; save(); go('home'); }
+});
+$('view').addEventListener('input', e => { if (e.target.id === 'rng') $('numv').textContent = e.target.value + FACTS[V.i].num.unit; });
+document.addEventListener('keydown', e => {
+  if (V.name !== 'play' && V.name !== 'review') return;
+  if (e.target.id === 'rng' && e.key !== 'Enter') return;
+  const k = '1234'.indexOf(e.key) >= 0 ? +e.key - 1 : 'abcd'.indexOf(e.key.toLowerCase());
+  const o = $('opts');
+  if (k >= 0 && o && o.children[k] && !V.answered) pick(k);
+  else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { const m = $('main'); if (m && !m.disabled) main(); }
+});
+
+let lastDay = today();
+setInterval(() => { tick(); if (today() !== lastDay) { lastDay = today(); if (V.name === 'home') paint(false); } }, 1000);
+paint(false);
+initSync();
+</script>

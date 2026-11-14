@@ -1,0 +1,11 @@
+{
+  "name": "jesi-znala",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Dnevna igra s pismima i činjenicama, s adminom i obavijestima.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "site": "python3 src/build.py",
+    "deploy": "python3 src/build.py && vercel deploy --prod"
+  }
+}

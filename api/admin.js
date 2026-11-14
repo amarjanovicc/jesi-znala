@@ -1,0 +1,134 @@
+// Admin API: pisma, igrači i obavijesti. Sve osim prijave traži token koji se dobije lozinkom (ADMIN_PASSWORD).
+const crypto = require('crypto');
+const { redis, isObj, summary, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify } = require('./_lib');
+
+const MAX_LETTERS = 400;
+
+async function loadPlayers() {
+  const keys = [];
+  let cursor = '0';
+  for (let i = 0; i < 30; i++) {
+    const r = await redis(['SCAN', cursor, 'MATCH', 'jz:p:*', 'COUNT', 200]);
+    cursor = String(r[0]); keys.push(...r[1]);
+    if (cursor === '0') break;
+  }
+  if (!keys.length) return [];
+  const raws = await redis(['MGET', ...keys.slice(0, 200)]);
+  const out = [];
+  raws.forEach((raw, i) => {
+    try {
+      const rec = JSON.parse(raw), code = keys[i].slice(5);
+      out.push({ code, rec, id: rec.watch || 'x' + crypto.createHash('sha256').update(code).digest('hex').slice(0, 16) });
+    } catch (e) { /* preskoči neispravan zapis */ }
+  });
+  return out;
+}
+
+module.exports = async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex');
+  const q = req.query || {}, body = isObj(req.body) ? req.body : {}, action = String(q.action || '');
+  const send = (s, o) => res.status(s).json(o);
+  try {
+    if (action === 'login') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      if (!String(process.env.ADMIN_PASSWORD || '').trim()) return send(503, { error: 'notconfigured' });
+      if (await tooManyLogins(req)) return send(429, { error: 'toomany' });
+      if (!passwordOk(body.password)) return send(401, { error: 'password' });
+      return send(200, { token: makeToken() });
+    }
+    if (!tokenOk(bearer(req))) return send(401, { error: 'auth' });
+
+    if (action === 'status') {
+      let storage = true;
+      try { await redis(['PING']); } catch (e) { storage = false; }
+      const { facts, source } = await getFacts();
+      return send(200, { storage, channels: channels(), start: config().start, base: baseFacts().length, count: facts.length, source });
+    }
+
+    if (action === 'letters') {
+      const { facts, source } = await getFacts();
+      return send(200, { letters: facts, source, base: baseFacts().length, start: config().start });
+    }
+
+    if (action === 'saveLetters') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const list = body.letters;
+      if (!Array.isArray(list) || list.length > MAX_LETTERS) return send(400, { error: 'bad', message: 'Popis pisama nije ispravan.' });
+      const cur = await getFacts();
+      // indeks pisma je ujedno ključ napretka, pa se pisma smiju mijenjati i dodavati, ali ne brisati
+      if (list.length < cur.facts.length) return send(400, { error: 'shorter', message: 'Pisma se ne smiju brisati jer bi se pokvario napredak igrača. Možeš ih urediti ili dodati nova.' });
+      const clean = [];
+      for (let i = 0; i < list.length; i++) {
+        const r = cleanLetter(list[i]);
+        if (r.error) return send(400, { error: 'invalid', index: i, message: 'Pismo № ' + String(i + 1).padStart(2, '0') + ': ' + r.error });
+        clean.push(r.letter);
+      }
+      if (cur.source === 'db') await redis(['SET', 'jz:letters:backup', JSON.stringify(cur.facts)]);
+      await redis(['SET', 'jz:letters', JSON.stringify(clean)]);
+      return send(200, { ok: true, count: clean.length });
+    }
+
+    if (action === 'restoreLetters') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const raw = await redis(['GET', 'jz:letters:backup']);
+      if (!raw) return send(404, { error: 'nobackup', message: 'Nema spremljene prethodne verzije.' });
+      await redis(['SET', 'jz:letters', raw]);
+      return send(200, { ok: true });
+    }
+
+    if (action === 'players') {
+      const { facts } = await getFacts(), titles = facts.map(f => f.title);
+      const list = (await loadPlayers()).map(p => {
+        const s = summary(p.rec.state, titles); delete s.letters;
+        return Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null }, s);
+      }).sort((a, b) => String(b.seen).localeCompare(String(a.seen)));
+      return send(200, { players: list });
+    }
+
+    if (action === 'player') {
+      const p = (await loadPlayers()).find(x => x.id === q.id);
+      if (!p) return send(404, { error: 'missing' });
+      const { facts } = await getFacts();
+      return send(200, Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null }, summary(p.rec.state, facts.map(f => f.title))));
+    }
+
+    if (action === 'createPlayer') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const A = 'abcdefghjkmnpqrstuvwxyz23456789', rnd = () => Array.from(crypto.randomBytes(16), x => A[x % A.length]).join('');
+      const code = rnd(), watch = rnd(), now = new Date().toISOString();
+      await redis(['SET', 'jz:p:' + code, JSON.stringify({ state: { f: {}, days: {}, week: {} }, watch, label: String(body.label || '').trim().slice(0, 30), created: now, seen: null })]);
+      await redis(['SET', 'jz:w:' + watch, code]);
+      return send(200, { code, watch });
+    }
+
+    if (action === 'labelPlayer') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const p = (await loadPlayers()).find(x => x.id === body.id);
+      if (!p) return send(404, { error: 'missing' });
+      p.rec.label = String(body.label || '').trim().slice(0, 30);
+      await redis(['SET', 'jz:p:' + p.code, JSON.stringify(p.rec)]);
+      return send(200, { ok: true, label: p.rec.label });
+    }
+
+    if (action === 'deletePlayer') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const p = (await loadPlayers()).find(x => x.id === body.id);
+      if (!p) return send(404, { error: 'missing' });
+      await redis(['DEL', 'jz:p:' + p.code]);
+      await redis(['DEL', 'jz:seen:' + p.code]);
+      if (p.rec.watch) await redis(['DEL', 'jz:w:' + p.rec.watch]);
+      return send(200, { ok: true });
+    }
+
+    if (action === 'testNotify') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const sent = await notify('Jesi znala? Probna obavijest', 'Ako ovo vidiš, obavijesti rade.');
+      return send(200, { sent, channels: channels() });
+    }
+
+    return send(404, { error: 'action' });
+  } catch (e) {
+    return send(e && e.code === 'nostore' ? 503 : 500, { error: e && e.code === 'nostore' ? 'nostore' : 'error' });
+  }
+};

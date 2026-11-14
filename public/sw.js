@@ -1,0 +1,15 @@
+const C = 'jesi-znala-202611141745';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
+self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll(SHELL))); self.skipWaiting(); });
+self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== C).map(x => caches.delete(x))))); self.clients.claim(); });
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  const u = new URL(e.request.url);
+  if (u.pathname.startsWith('/api/') && u.pathname !== '/api/facts') return;
+  e.respondWith(caches.open(C).then(async c => {
+    const hit = await c.match(e.request, { ignoreSearch: e.request.mode === 'navigate' });
+    const net = fetch(e.request).then(r => { if (r && (r.ok || r.type === 'opaque')) c.put(e.request, r.clone()); return r; });
+    if (e.request.mode === 'navigate') return net.catch(() => hit || c.match('index.html'));
+    return hit || net;
+  }));
+});
