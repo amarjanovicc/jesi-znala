@@ -22,6 +22,7 @@ async function describe({ created, cur, merged, label, ua }) {
   const bi = before.int || { c: {}, ideas: [] }, mi = merged.int, newIdeas = mi ? (mi.ideas || []).filter(t => !(bi.ideas || []).includes(t)) : [];
   const catsChanged = mi && Object.keys(mi.c).sort().join() !== Object.keys(bi.c || {}).sort().join();
   const newFb = (merged.fb || []).filter(x => !(before.fb || []).some(y => y.d === x.d && y.t === x.t));
+  const bb = (before.bm && before.bm.l) || [], newTerms = ((merged.bm && merged.bm.l) || []).filter(x => !bb.some(y => y.t === x.t && y.i === x.i));
   const reacts = keys.filter(k => merged.f[k].re && merged.f[k].re !== (before.f[k] || {}).re);
   const sum = summary(merged, titles);
   const r0 = rankOf(before), r1 = rankOf(merged), up = r1.index > r0.index ? ' Novi čin: ' + r1.name + '!' : '';
@@ -36,10 +37,11 @@ async function describe({ created, cur, merged, label, ua }) {
   likes.slice(0, 2).forEach(i => lines.push(who + ': sviđa joj se pismo ' + ref(i) + ' ♥'));
   if (catsChanged) lines.push(who + ' zanima: ' + (Object.keys(mi.c).map(c => CAT_L[c]).join(', ') || 'ništa označeno') + '.');
   newIdeas.slice(0, 3).forEach(t => lines.push(who + ' predlaže temu: „' + t + '”'));
+  newTerms.slice(0, 3).forEach(x => lines.push(who + ' sprema za kasnije: „' + x.t + '” (pismo ' + ref(x.i) + ')'));
   if (weeks.length && !fresh.length) { const w = merged.week[weeks[0]]; lines.push(who + ': nedjeljna razglednica ' + w.r + '/' + w.n + tail); }
   if (up && !fresh.length && !weeks.length) lines.push(who + ':' + up);
   if (!lines.length) return null;
-  const title = newFb.length ? 'Jesi znala? Poruka' : newIdeas.length ? 'Jesi znala? Prijedlog teme' : msgs.length ? 'Jesi znala? Poruka' : likes.length ? 'Jesi znala? Sviđa joj se' : catsChanged ? 'Jesi znala? Interesi' : fresh.length ? 'Jesi znala? Odigrano' : reacts.length ? 'Jesi znala? Reakcija' : weeks.length ? 'Jesi znala? Nedjeljna razglednica' : 'Jesi znala? Novi čin';
+  const title = newFb.length ? 'Jesi znala? Poruka' : newIdeas.length ? 'Jesi znala? Prijedlog teme' : newTerms.length ? 'Jesi znala? Pojam za kasnije' : msgs.length ? 'Jesi znala? Poruka' : likes.length ? 'Jesi znala? Sviđa joj se' : catsChanged ? 'Jesi znala? Interesi' : fresh.length ? 'Jesi znala? Odigrano' : reacts.length ? 'Jesi znala? Reakcija' : weeks.length ? 'Jesi znala? Nedjeljna razglednica' : 'Jesi znala? Novi čin';
   return [title, lines.join('\n')];
 }
 

@@ -39,6 +39,8 @@ Dnevna igra znanja u obliku pisma: svaki dan stigne jedno **pismo s kratkom pri�
 | **Nedjeljna razglednica** | Nedjeljom pet pitanja iz cijelog albuma. |
 | **Reakcije i poruke** | Nakon pisma može se dati reakcija i napisati kratka poruka koja stiže adminu. |
 | **Ukus** | Srce „sviđa mi se" na pismima, označena područja interesa i prijedlozi tema; admin vidi što voli i dobiva obavijest. |
+| **Za kasnije** | U pismu se označi riječ ili pojam koji ne znaš (običan odabir teksta, do 60 znakova) i spremi „za kasnije". Zaslon „Za kasnije" ih skuplja, vodi na pretragu (Wikipedia) i na izvorno pismo, a „Znam to sad" ih uklanja. Popis (do 60 pojmova) sinkronizira se, a admin ga vidi u detaljima igrača i dobiva obavijest. |
+| **Povijesni izvori** | Uz pismo admin može navesti do 5 izvora (naziv i neobavezan `https` link); prikazuju se ispod pisma i u „Za kasnije". |
 | **Serija** | Dani zaredom s barem jednim odigranim pismom; prikazuje se na početnom ekranu, u putovnici (najdulja serija) i na ljestvici lige. Živa je ako je zadnji dan danas ili jučer. |
 | **Liga** | Privatna soba za do 8 ljudi s pozivnim kodom (6 znakova) ili linkom `/#liga=KOD`. Bez računa: vidi se samo nadimak, bodovi tjedna, serija i čin. Tjedan teče od ponedjeljka do nedjelje (pismo 2 boda, čisti žig +1, razglednica +1 po točnom), a ljestvica pokazuje i pobjednika prošlog tjedna. Do 3 lige po igraču, do 30 liga ukupno. |
 | **Podsjetnik** | Web push jednom dnevno oko 18 sati, samo ako je uključen i toga dana još nije otvoreno pismo; tekst spominje seriju u opasnosti. Na iPhoneu radi tek kad je igra dodana na početni zaslon. |
@@ -159,7 +161,8 @@ Primjer pisma:
     { q: 'Prvo pitanje za provjeru?',  opts: ['Točno', 'Netočno', 'Netočno'], a: 0 },
     { q: 'Drugo pitanje za provjeru?', opts: ['Točno', 'Netočno'],            a: 0 }
   ],
-  note: 'Neobavezna osobna poruka rukopisom'
+  note: 'Neobavezna osobna poruka rukopisom',
+  src: [{ t: 'Herodot, Povijest VII', u: 'https://…' }]   // neobavezno, do 5 povijesnih izvora; u (https) je neobavezan
 }
 ```
 

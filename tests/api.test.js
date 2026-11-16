@@ -117,5 +117,23 @@ let ok = 0; const t = (name, fn) => fn().then(() => { ok++; console.log('ok  ', 
     assert.strictEqual((await call(admin, { method: 'POST', query: { action: 'deleteLeague' }, headers: auth, body: { id: invite } })).s, 200); assert.strictEqual(D.has('jz:lg:' + invite), false);
     assert.strictEqual((await lg(B, { action: 'mine' })).j.leagues.every(l => l.id !== invite), true);
   });
+  await t('Za kasnije: čišćenje, zadnja promjena pobjeđuje, sinkronizacija i sažetak', async () => {
+    const iso = x => '2026-11-16T' + x + ':00.000Z', mk = (u, l) => ({ f: {}, days: {}, bm: { u: iso(u), l } });
+    const c = lib.clean(mk('10:00', [{ t: ' <b>Tespijci</b> ', i: 4, d: iso('10:00') }, { t: 'x', i: 1, d: iso('10:00') }, { t: 'ok pojam', i: 'abc', d: iso('10:00') }, { t: 'Termopile', i: 4, d: iso('10:00') }]));
+    assert.deepStrictEqual(c.bm.l.map(x => x.t), ['b Tespijci /b', 'Termopile']); assert(!/[<>]/.test(JSON.stringify(c.bm)));
+    assert.strictEqual(lib.merge(mk('10:00', [{ t: 'ab', i: 1, d: iso('10:00') }]), mk('11:00', [])).bm.l.length, 0);   // novija prazna lista (uklonila je pojam) pobjeđuje
+    assert.strictEqual(lib.merge(mk('12:00', [{ t: 'ab', i: 1, d: iso('12:00') }]), mk('11:00', [])).bm.l.length, 1);
+    assert.strictEqual(lib.clean({ f: {}, days: {} }).bm, undefined);
+    assert.strictEqual(lib.clean(mk('10:00', Array.from({ length: 80 }, (_, k) => ({ t: 'pojam' + k, i: 1, d: iso('10:00') })))).bm.l.length, 60);
+    const prog = require(root + '/api/progress'), rq = { method: 'POST', headers: J, body: { code: C, state: { f: {}, days: {}, bm: { u: iso('10:00'), l: [{ t: 'Tespijci', i: 4, d: iso('10:00') }] } } } };
+    assert.strictEqual((await call(prog, rq)).s, 200);
+    assert.deepStrictEqual((await call(admin, { method: 'GET', query: { action: 'players' }, headers: { authorization: 'Bearer ' + lib.makeToken() } })).j.players.find(p => p.label === 'Cili').bm.map(x => x.t), ['Tespijci']);
+  });
+  await t('izvori pisma: valjani, https-only, najviše 5', async () => {
+    const base = require(root + '/data/facts.json')[0], withSrc = src => lib.cleanLetter(Object.assign({}, base, { src }));
+    assert.deepStrictEqual(withSrc([{ t: 'Herodot, Povijest VII', u: 'https://example.org/h' }, { t: 'Bez linka' }]).letter.src, [{ t: 'Herodot, Povijest VII', u: 'https://example.org/h' }, { t: 'Bez linka' }]);
+    for (const bad of [[{ t: 'x', u: 'http://a.hr' }], [{ t: 'x', u: 'javascript:alert(1)' }], [{ t: '' }], Array.from({ length: 6 }, () => ({ t: 'x' })), 'nije popis']) assert(withSrc(bad).error, JSON.stringify(bad));
+    assert.strictEqual(withSrc([]).letter.src, undefined);
+  });
   console.log(ok + ' testova prošlo' + (process.exitCode ? ', ima grešaka' : ''));
 })();

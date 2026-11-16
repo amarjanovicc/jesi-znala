@@ -2,6 +2,18 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.5.0] - 2026-11-16
+
+### Igra
+- **Za kasnije:** označi riječ ili pojam koji ne znaš u pismu i spremi ga; zaslon „Za kasnije" s linkom na pretragu, na pismo i na izvore, uz „Znam to sad". Sinkronizira se među uređajima.
+- **Povijesni izvori** uz pismo (naziv i neobavezan https link), ispod teksta pisma.
+
+### Admin
+- Polje „Povijesni izvori" u uredniku pisma (jedan po retku, `Naziv | https://link`); pojmovi „Za kasnije" u detaljima igrača; obavijest kad spremi pojam.
+
+### Razvoj
+- Testovi za pojmove (čišćenje, zadnja promjena pobjeđuje) i za valjanost izvora.
+
 ## [1.4.0] - 2026-11-16
 
 ### Igra

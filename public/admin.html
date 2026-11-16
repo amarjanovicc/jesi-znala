@@ -352,6 +352,8 @@ function viewEditor(page) {
     qBlock.appendChild(h('div', { class: 'three' }, f('a', 'Točan odgovor'), f('tol', 'Tolerancija (±)'), f('unit', 'Jedinica uz broj (npr. " km")', 'text')));
     qBlock.appendChild(h('div', { class: 'two' }, f('du', 'Jedinica u poruci o pogrešci', 'text'), f('real', 'Točan odgovor kao tekst (neobavezno)', 'text')));
   };
+  var parseSrc = function (v) { return v.split('\n').map(function (l) { return l.trim(); }).filter(Boolean).slice(0, 5).map(function (l) { var i = l.lastIndexOf('|'); if (i > 0) { var u = l.slice(i + 1).trim(), t = l.slice(0, i).trim(); return u ? { t: t, u: u } : { t: t }; } return { t: l }; }); };
+  var srcBox = h('textarea', { rows: 3, maxlength: 900, style: 'min-height:80px', placeholder: 'Jedan izvor po retku, link je neobavezan:\nHerodot, Povijest VII | https://…', value: (d.src || []).map(function (x) { return x.t + (x.u ? ' | ' + x.u : ''); }).join('\n'), oninput: function (e) { d.src = parseSrc(e.target.value); changed(); } });
   var bind = function (k, extra) { return Object.assign({ value: d[k] == null ? '' : d[k], oninput: function (e) { d[k] = e.target.value; changed(); } }, extra || {}); };
   var typeSel = h('select', { 'aria-label': 'Vrsta prvog pitanja', onchange: function (e) { isNum = e.target.value === 'num'; if (isNum) d.num = d.num || { min: 0, max: 100, step: 1, a: 50, tol: 5, unit: '', du: '', real: '' }; else { delete d.num; d.opts = d.opts && d.opts.length >= 2 ? d.opts : ['', '']; d.a = d.a || 0; } drawQ(); changed(); } },
     h('option', { value: 'choice', selected: !isNum }, 'Odabir odgovora'), h('option', { value: 'num', selected: isNum }, 'Procjena broja (klizač)'));
@@ -382,7 +384,8 @@ function viewEditor(page) {
           h('div', { class: 'two' }, h('div', {}, h('label', {}, 'Kategorija'), h('select', { onchange: function (e) { d.cat = e.target.value; changed(); } }, Object.keys(CATS).map(function (k) { return h('option', { value: k, selected: d.cat === k }, CATS[k]); }))), h('div', {}, h('label', {}, 'Naslov'), h('input', Object.assign({ type: 'text', maxlength: 80, required: true }, bind('title'))))),
           h('div', { class: 'two' }, h('div', {}, h('label', {}, 'Broj na marki'), h('input', Object.assign({ type: 'text', maxlength: 10, required: true, placeholder: '38' }, bind('fig')))), h('div', {}, h('label', {}, 'Jedinica'), h('input', Object.assign({ type: 'text', maxlength: 12, placeholder: 'minuta' }, bind('figu'))))),
           h('label', {}, 'Priča'), h('textarea', Object.assign({ maxlength: 2000, required: true, placeholder: 'Kratka priča, 60 do 100 riječi: prizor, obrat, nešto što se pamti.' }, bind('story'))),
-          h('label', {}, 'Tvoja poruka rukopisom (neobavezno)'), h('input', Object.assign({ type: 'text', maxlength: 200 }, bind('note')))),
+          h('label', {}, 'Tvoja poruka rukopisom (neobavezno)'), h('input', Object.assign({ type: 'text', maxlength: 200 }, bind('note'))),
+          h('label', {}, 'Povijesni izvori (neobavezno, do 5, prikazuju se ispod pisma)'), srcBox),
         h('div', { class: 'group' }, h('h3', {}, 'Pitanje 1 (prije priče, kao mamac)'), h('label', {}, 'Vrsta'), typeSel, h('label', {}, 'Pitanje'), h('input', Object.assign({ type: 'text', maxlength: 300, required: true }, bind('q'))), qBlock),
         quizBlock(0), quizBlock(1)),
       pv),
@@ -444,6 +447,12 @@ async function viewPlayer(page) {
     page.appendChild(h('p', {}, h('strong', {}, 'Zanima je: '), iCats.length ? iCats.map(function (c) { return CATS[c] || c; }).join(', ') : h('span', { class: 'mute' }, 'nije označila')));
     if (iIdeas.length) page.appendChild(h('p', {}, h('strong', {}, 'Predložene teme: '), iIdeas.join(' · ')));
     if (liked.length) page.appendChild(h('p', {}, h('strong', {}, '♥ ' + liked.length + ' ' + plural(liked.length, 'pismo', 'pisma', 'pisama') + ': '), liked.map(function (l) { return pad(l.i + 1) + ' ' + l.title; }).join(' · ')));
+  }
+  var bmk = p.bm || [];
+  if (bmk.length) {
+    page.appendChild(h('h2', {}, 'Za kasnije'));
+    page.appendChild(h('p', { class: 'mute small' }, 'Pojmovi koje je označila kao nepoznate. Dobra tema za sljedeće pismo.'));
+    page.appendChild(h('ul', { class: 'todo' }, bmk.slice().reverse().map(function (x) { return h('li', {}, h('span', {}, x.t), h('span', { class: 'mute small' }, 'pismo ' + pad(x.i + 1) + ' · ' + rel(x.d))); })));
   }
   var gfb = p.fb || [];
   if (gfb.length) {

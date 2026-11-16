@@ -45,7 +45,16 @@ function clean(st) {
     const ideas = Array.isArray(it.ideas) ? it.ideas.filter(t => typeof t === 'string').map(t => t.replace(/[\u0000-\u001f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60)).filter(t => t.length >= 2).slice(0, 8) : [];
     out.int = { cu: it.cu, c, ideas };
   }
+  out.bm = cleanBm(st.bm) || undefined; if (!out.bm) delete out.bm;
   return out;
+}
+
+// pojmovi koje je označila "za kasnije": cijeli popis, zadnja promjena pobjeđuje
+function cleanBm(b) {
+  if (!isObj(b) || typeof b.u !== 'string' || !ISO.test(b.u) || !Array.isArray(b.l)) return null;
+  const l = b.l.filter(x => isObj(x) && typeof x.t === 'string' && typeof x.d === 'string' && ISO.test(x.d) && /^\d{1,3}$/.test(String(x.i)))
+    .map(x => ({ t: x.t.replace(/[\u0000-\u001f<>&"]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60), i: x.i | 0, d: x.d })).filter(x => x.t.length >= 2).slice(-60);
+  return { u: b.u, l };
 }
 
 // opće poruke adminu, bilo kad (nisu vezane uz pismo)
@@ -62,6 +71,7 @@ function merge(a, b) {
   const seen = new Set(), fb = [...(a.fb || []), ...(b.fb || [])].filter(x => { const k = x.d + x.t; if (seen.has(k)) return false; seen.add(k); return true; });
   out.fb = fb.sort((x, y) => x.d.localeCompare(y.d)).slice(-20);
   const ia = a.int, ib = b.int; if (ia || ib) out.int = !ia ? ib : !ib ? ia : (ib.cu >= ia.cu ? ib : ia);
+  const ma = a.bm, mb = b.bm; if (ma || mb) out.bm = !ma ? mb : !mb ? ma : (mb.u >= ma.u ? mb : ma);
   for (const k of new Set([...Object.keys(a.f), ...Object.keys(b.f)])) {
     const x = a.f[k], y = b.f[k];
     out.f[k] = !x ? y : !y ? x : withReply(x, y, rank(x) >= rank(y) ? x : y);
@@ -119,7 +129,7 @@ function summary(st, titles) {
   return {
     n: letters.length, total: titles.length, perfect: letters.filter(l => l.score === 3).length, learned: letters.filter(l => l.learned).length,
     streak, best: streakInfo(st.days, zagrebDay()).best, last: days.length ? days[days.length - 1] : null, weeks: Object.keys(st.week).length, letters,
-    points: pointsOf(st), rank: rankOf(st).name, likes: letters.filter(l => l.lk).length, int: st.int || null, fb: st.fb || [],
+    points: pointsOf(st), rank: rankOf(st).name, likes: letters.filter(l => l.lk).length, int: st.int || null, fb: st.fb || [], bm: st.bm ? st.bm.l : [],
   };
 }
 
@@ -176,6 +186,17 @@ function cleanLetter(f) {
   const q1 = cleanChoice(f.quiz[0]), q2 = cleanChoice(f.quiz[1]);
   if (!q1 || !q2) return bad('Svako pitanje za provjeru treba tekst i 2 do 4 odgovora, uz označen točan.');
   out.quiz = [q1, q2];
+  if (f.src != null && f.src !== '') {   // povijesni izvori: do 5, naziv i neobavezan https link
+    if (!Array.isArray(f.src) || f.src.length > 5) return bad('Izvora može biti najviše 5.');
+    const src = [];
+    for (const x of f.src) {
+      if (!isObj(x) || !txt(x.t, 140)) return bad('Svaki izvor treba naziv (do 140 znakova).');
+      const o = { t: x.t.trim() };
+      if (x.u != null && x.u !== '') { if (typeof x.u !== 'string' || !/^https:\/\/[^\s<>"']{3,300}$/.test(x.u)) return bad('Link izvora mora počinjati s https://'); o.u = x.u; }
+      src.push(o);
+    }
+    if (src.length) out.src = src;
+  }
   if (txt(f.note, 200)) out.note = f.note.trim();
   return { letter: out };
 }
