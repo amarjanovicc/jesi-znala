@@ -200,6 +200,15 @@ button.cell:active { transform: scale(.95) }
 .re-row button[data-act=re] { flex: 1 1 96px; min-height: 44px; border: 1.5px solid var(--ink); border-radius: 2px; padding: 6px 8px; font: 700 13px/1.2 var(--type); transition: transform .12s ease-out, background-color .2s ease, color .2s ease }
 .re-row button[data-act=re]:active { transform: scale(.97) }
 .re-row button[aria-pressed="true"] { background: var(--ink); color: var(--env) }
+.like { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 50px; border: 1.5px solid var(--ink); border-radius: 2px; font: 700 14px/1.2 var(--type); letter-spacing: .06em; background: var(--card); box-shadow: var(--lift); transition: transform .12s ease-out, background-color .2s ease, color .2s ease }
+.like:active { transform: scale(.97) } .like .hrt { font-size: 20px; line-height: 1; color: var(--red) }
+.like[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: var(--stamp) } .like[aria-pressed="true"] .hrt { color: var(--stamp) }
+.cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.catbtn { min-height: 54px; border: 1.5px solid var(--cat); color: var(--cat); border-radius: 2px; font: 700 14px/1.2 var(--type); letter-spacing: .04em; padding: 6px 8px; text-align: center; transition: transform .12s ease-out, background-color .2s ease, color .2s ease }
+.catbtn:active { transform: scale(.97) } .catbtn[aria-pressed="true"] { background: var(--cat); color: var(--stamp) }
+.ideas { list-style: none; display: flex; flex-direction: column; gap: 8px }
+.ideas li { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(28,42,68,.07); padding: 4px 4px 4px 12px; border-radius: 2px; font-size: 15px; overflow-wrap: anywhere }
+.ideas button { min-width: 44px; min-height: 44px; font-size: 18px; color: var(--soft) }
 .reply textarea { width: 100%; min-height: 76px; font: 16px/1.5 var(--type); color: var(--ink); background: transparent; border: 0; border-bottom: 1.5px solid var(--ink); border-radius: 0; padding: 6px 2px; resize: vertical }
 .reply .sent { font: 500 22px/1.15 var(--hand); color: var(--pen); flex: 1 1 140px; overflow-wrap: anywhere }
 .won { font: 700 26px/1.1 var(--hand); color: var(--red); transform: rotate(-1.5deg); align-self: flex-start }
@@ -333,7 +342,8 @@ const BUILD = 'dev';
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 let FX = true; try { FX = localStorage.getItem(FXK) !== '0'; } catch (e) {}   // zadano uključeno, i uz smanjeno kretanje na uređaju
 document.documentElement.classList.toggle('fx', FX);
-const GAPS = [2, 5, 12];   // ponavljanje: za 2, pa 5, pa 12 dana; nakon trećeg točnog marka je zapamćena
+const GAPS = [2, 5, 12];
+const IDEA_MAX = 8;   // ponavljanje: za 2, pa 5, pa 12 dana; nakon trećeg točnog marka je zapamćena
 let S = { f: {}, days: {} };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.f) S = s; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} schedulePush(); };
@@ -446,10 +456,12 @@ const VIEWS = {
       '<p class="rk-next">' + (rk.next ? 'Još ' + left + ' ' + plural(left, 'bod', 'boda', 'bodova') + ' do čina „' + rk.next.name + '”. ' : 'Najviši čin. ') + 'Pismo vrijedi 2 boda, čisti žig +1, zapamćeno +2.</p>' +
       '<ul class="visas">' + SEALS.map((x, k) => '<li' + (have.includes(x.id) ? ' class="on" style="--vc:' + VC[k % 3] + ';--va:' + VA[k % 3] + 'deg"' : '') + '><span class="vz">' + x.g + '</span>' + x.t + '</li>').join('') + '</ul>' +
       '<div class="mrz" aria-hidden="true"><span>' + fill36('P<JZN<<' + mrz(rk.name)) + '</span><span>' + fill36(String(rk.p).padStart(5, '0') + '<BODOVA<' + String(c.n).padStart(3, '0') + '<PISAMA') + '</span></div></div></section>';
+    { const ic = S.int ? Object.keys(S.int.c || {}).filter(k => S.int.c[k]).length : 0, lc = Object.values(S.f).filter(x => x.lk).length;
+      h += '<button class="slip" data-act="interests"><span><b>Tvoj ukus</b>' + (ic || lc ? (ic ? ic + ' ' + plural(ic, 'područje', 'područja', 'područja') + ' interesa' : '') + (ic && lc ? ', ' : '') + (lc ? lc + ' ♥' : '') : 'Označi što te zanima i predloži temu.') + '</span><u>Otvori ›</u></button>'; }
     h += '<section class="book"><div class="book-h"><h2>Album</h2><span>' + c.n + ' / ' + FACTS.length + '</span></div><div class="grid">';
     FACTS.forEach((f, i) => {
       const st = S.f[i];
-      if (st) { const n = st.r.filter(Boolean).length; h += '<button class="cell" data-act="open" data-i="' + i + '" aria-label="' + f.title + '">' + stamp(i, 'sm') + '<span class="sc' + (n === 3 ? ' full' : '') + '">' + (st.due == null ? 'zapamćeno' : n + '/3') + '</span></button>'; }
+      if (st) { const n = st.r.filter(Boolean).length; h += '<button class="cell" data-act="open" data-i="' + i + '" aria-label="' + f.title + '">' + stamp(i, 'sm') + '<span class="sc' + (n === 3 ? ' full' : '') + '">' + (st.due == null ? 'zapamćeno' : n + '/3') + (st.lk ? ' ♥' : '') + '</span></button>'; }
       else if (i < u) h += '<button class="cell empty wait" data-act="open" data-i="' + i + '" aria-label="Neotvoreno pismo ' + no(i) + '"><span>' + no(i) + '<small>čeka</small></span></button>';
       else h += '<span class="cell empty">' + no(i) + '</span>';
     });
@@ -484,7 +496,7 @@ const VIEWS = {
       '<div class="frank' + (V.fresh ? ' fresh' : '') + '">' + postmark(V.i, V.fresh) + stamp(V.i, 'lg') + '<span class="big">' + big + '</span></div>' +
       (V.rankUp ? '<p class="won">Novi čin: ' + V.rankUp + '!</p>' : '') + (V.won && V.won.length ? '<p class="won">Nova viza: ' + V.won.join(', ') + '!</p>' : '') + '<p class="say">' + when + '</p>' +
       '<ul class="recap">' + qs.map(x => '<li class="' + (x.ok ? 'y' : 'n') + '"><i>' + (x.ok ? '✓' : '✗') + '</i><div>' + x.q + '<span>' + x.ans + '</span></div></li>').join('') + '</ul>' +
-      replyHtml(st) +
+      likeHtml(st) + replyHtml(st) +
       '<div class="share"><span class="lbl">Javi kako ti je išlo</span><div class="share-row">' + a + WA + t + '">WhatsApp</a>' + a + 'https://twitter.com/intent/tweet?text=' + t + '">X</a><button class="btn alt" data-act="copy">Kopiraj</button></div></div>' +
       sheet(V.i, false) +
       '<div class="dock">' + (nx != null ? '<button class="btn" data-act="open" data-i="' + nx + '">Sljedeće pismo</button>' : '<button class="btn" data-act="home">U album</button>') + '</div>';
@@ -498,6 +510,15 @@ const VIEWS = {
   },
 
   open() { return '<div class="opening" data-act="skip" role="button" aria-label="Preskoči">' + openingEnvelope(V.i) + '<p class="hand-s ohint">dodirni za preskok</p></div>'; },
+
+  interests() {
+    const it = S.int || { c: {}, ideas: [] }, on = Object.keys(it.c || {}).filter(k => it.c[k]).length, ideas = it.ideas || [];
+    return '<button class="back" data-act="home">‹ natrag</button><section class="card"><div class="card-h"><span>Tvoj ukus</span><span>' + on + ' / ' + Object.keys(CATS).length + '</span></div>' +
+      '<p class="say">Označi što te zanima. Vidim što voliš i pišem više takvih pisama. Srce ispod pisma pokazuje koja ti se sviđaju.</p>' +
+      '<div class="cats">' + Object.keys(CATS).map(c => '<button type="button" class="catbtn ' + c + '" data-act="cat" data-c="' + c + '" aria-pressed="' + !!(it.c || {})[c] + '">' + CATS[c] + '</button>').join('') + '</div>' +
+      '<div class="stack" style="padding-top:16px"><label class="lbl" for="ideaIn">Predloži temu</label><input id="ideaIn" class="code-in" maxlength="60" autocomplete="off" placeholder="npr. Egipat, svemir, tajne službe"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '><button class="btn alt" data-act="idea"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '>Dodaj temu</button>' +
+      (ideas.length ? '<ul class="ideas">' + ideas.map((t, i) => '<li><span>' + esc(t) + '</span><button type="button" data-act="rmidea" data-i="' + i + '" aria-label="Ukloni temu">×</button></li>').join('') + '</ul>' : '') + '</div></section>';
+  },
 
   sync() {
     const base = location.origin + '/';
@@ -622,9 +643,9 @@ async function pushNow() {
   if (busy) return schedulePush();
   busy = true;
   try {
-    const r = await api('POST', '/api/progress', { code: SY.code, watch: SY.watch, rv: SY.rv | 0, state: { f: S.f, days: S.days, week: S.week || {} } });
+    const r = await api('POST', '/api/progress', { code: SY.code, watch: SY.watch, rv: SY.rv | 0, state: { f: S.f, days: S.days, week: S.week || {}, int: S.int } });
     if (r.ok && r.j && r.j.state) {
-      const m = r.j.state; S = { f: m.f || {}, days: m.days || {}, week: m.week || {}, snd: S.snd }; localOnly();
+      const m = r.j.state; S = { f: m.f || {}, days: m.days || {}, week: m.week || {}, int: m.int || S.int, snd: S.snd }; localOnly();
       if ((r.j.watch && r.j.watch !== SY.watch) || (r.j.rv | 0) !== (SY.rv | 0)) { SY.watch = r.j.watch || SY.watch; SY.rv = r.j.rv | 0; saveSY(); }
       SY.err = null; SY.last = new Date();
     } else SY.err = r.status === 503 ? 'nostore' : 'fail';
@@ -743,6 +764,7 @@ const SND = {
 function feedback(ok) { SND.key(); setTimeout(ok ? SND.bell : SND.scratch, 180); }
 
 /* Odgovor adminu: reakcija na pismo i kratka poruka. Vidi se samo uz sinkronizaciju, jer putuje preko servera. */
+const likeHtml = st => '<button type="button" class="like" data-act="like" aria-pressed="' + !!st.lk + '"><span class="hrt" aria-hidden="true">' + (st.lk ? '♥' : '♡') + '</span><span>' + (st.lk ? 'Sviđa ti se' : 'Sviđa mi se ovo pismo') + '</span></button>';
 function replyHtml(st) {
   if (!API || !SY.code) return '';
   const b = (v, t) => '<button type="button" data-act="re" data-v="' + v + '" aria-pressed="' + (st.re === v) + '">' + t + '</button>';
@@ -791,6 +813,11 @@ $('view').addEventListener('click', e => {
   else if (a === 'copylink') copy(b, b.dataset.t);
   else if (a === 'snd') { S.snd = !sndOn(); save(); SND.key(); go('home', {}, false); bottom(); }
   else if (a === 're') { const st = S.f[V.i]; if (st) { st.re = b.dataset.v; save(); SND.key(); b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === st.re))); } }
+  else if (a === 'like') { const st = S.f[V.i]; if (st) { st.lk = st.lk ? 0 : 1; st.lt = new Date().toISOString(); save(); SND.key(); b.setAttribute('aria-pressed', String(!!st.lk)); b.innerHTML = likeHtml(st).replace(/^<button[^>]*>|<\/button>$/g, ''); } }
+  else if (a === 'interests') go('interests');
+  else if (a === 'cat') { S.int = S.int || { c: {}, ideas: [] }; S.int.c[b.dataset.c] = S.int.c[b.dataset.c] ? 0 : 1; S.int.cu = new Date().toISOString(); save(); SND.key(); paint(false); }
+  else if (a === 'idea') addIdea();
+  else if (a === 'rmidea') { if (S.int && S.int.ideas) { S.int.ideas.splice(+b.dataset.i, 1); S.int.cu = new Date().toISOString(); save(); paint(false); } }
   else if (a === 'sendmsg') sendMsg(b);
   else if (a === 'copy') copy(b, shareText());
   else if (a === 'copyask') copy(b, ASK_MORE);
@@ -798,6 +825,14 @@ $('view').addEventListener('click', e => {
   else if (a === 'noask') { go('home', {}, false); bottom(); }
   else if (a === 'wipe') { SY = { code: null, watch: null, last: null, err: null }; saveSY(); S = { f: {}, days: {} }; save(); go('home'); }
 });
+function addIdea() {
+  const el = $('ideaIn'); if (!el) return;
+  const t = el.value.replace(/\s+/g, ' ').trim().slice(0, 60);
+  S.int = S.int || { c: {}, ideas: [] }; S.int.ideas = S.int.ideas || [];
+  if (t.length < 2 || S.int.ideas.length >= IDEA_MAX || S.int.ideas.some(x => x.toLowerCase() === t.toLowerCase())) return;
+  S.int.ideas.push(t); S.int.cu = new Date().toISOString(); save(); SND.key(); paint(false);
+}
+$('view').addEventListener('keydown', e => { if (e.target.id === 'ideaIn' && e.key === 'Enter') { e.preventDefault(); addIdea(); } });
 $('view').addEventListener('input', e => { if (e.target.id === 'rng') $('numv').textContent = e.target.value + FACTS[V.i].num.unit; });
 document.addEventListener('keydown', e => {
   if (V.name !== 'play' && V.name !== 'review') return;

@@ -82,6 +82,7 @@ module.exports = async (req, res) => {
       const list = (await loadPlayers()).map(p => {
         const s = summary(p.rec.state, titles);
         const last = s.letters.filter(l => l.msg).sort((a, b) => String(b.mt).localeCompare(String(a.mt)))[0];
+        s.likeCats = {}; s.letters.filter(l => l.lk).forEach(l => { const c = facts[l.i] && facts[l.i].cat; if (c) s.likeCats[c] = (s.likeCats[c] || 0) + 1; });
         s.today = todayOf(p.rec.state, titles); s.ua = p.rec.ua || '';
         s.lastMsg = last ? { i: last.i, title: last.title, msg: last.msg, mt: last.mt } : null; s.messages = s.letters.filter(l => l.msg).length; delete s.letters;
         return Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null }, s);
@@ -93,8 +94,9 @@ module.exports = async (req, res) => {
       const p = (await loadPlayers()).find(x => x.id === q.id);
       if (!p) return send(404, { error: 'missing' });
       const { facts } = await getFacts();
-      const titles = facts.map(f => f.title);
-      return send(200, Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null, ua: p.rec.ua || '', today: todayOf(p.rec.state, titles) }, summary(p.rec.state, titles)));
+      const titles = facts.map(f => f.title), sm = summary(p.rec.state, titles);
+      sm.letters.forEach(l => { l.cat = facts[l.i] ? facts[l.i].cat : ''; });
+      return send(200, Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null, ua: p.rec.ua || '', today: todayOf(p.rec.state, titles) }, sm));
     }
 
     if (action === 'createPlayer') {

@@ -2,6 +2,20 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.2.0] - 2026-11-16
+
+Ukus i interesi.
+
+### Igra
+- „Sviđa mi se": srce na svakom pismu (vidi se i u albumu).
+- „Tvoj ukus": označi područja koja te zanimaju (povijest, antika, geografija, informatika) i predloži vlastite teme (do 8).
+- Sve se sinkronizira s uređajem; zadnja promjena pobjeđuje.
+
+### Admin
+- Kartica Pregled: što voli po područjima (srca i interesi) i popis predloženih tema.
+- Detalji igrača: interesi, predložene teme i pisma koja joj se sviđaju.
+- Obavijest kad označi srce, promijeni interese ili predloži temu.
+
 ## [1.1.0] - 2026-11-16
 
 Uređaji bez prijave.

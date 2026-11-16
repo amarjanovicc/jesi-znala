@@ -38,6 +38,7 @@ Dnevna igra znanja u obliku pisma: svaki dan stigne jedno **pismo s kratkom pri�
 | **Ponavljanje** | Riješena pisma vraćaju se s jednim pitanjem nakon 2, 5 i 12 dana. Nakon trećeg točnog odgovora pismo je „zapamćeno". |
 | **Nedjeljna razglednica** | Nedjeljom pet pitanja iz cijelog albuma. |
 | **Reakcije i poruke** | Nakon pisma može se dati reakcija i napisati kratka poruka koja stiže adminu. |
+| **Ukus** | Srce „sviđa mi se" na pismima, označena područja interesa i prijedlozi tema; admin vidi što voli i dobiva obavijest. |
 | **Uređaji i sinkronizacija** | Svaki mobitel dobije anonimni ID bez prijave. Napredak se čuva na serveru i vraća ako preglednik obriše podatke; uređaje se može spojiti kodom u linku. |
 | **Offline** | Aplikacija se može dodati na početni zaslon i radi bez interneta (service worker). |
 

@@ -30,6 +30,7 @@ function clean(st) {
       o.msg = x.msg.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 280);
       o.mt = typeof x.mt === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(x.mt) ? x.mt : new Date().toISOString();
     }
+    if (typeof x.lt === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(x.lt)) { o.lk = x.lk ? 1 : 0; o.lt = x.lt; }   // "sviđa mi se" (zadnja promjena pobjeđuje)
     out.f[k] = o;
   }
   if (isObj(st.days)) for (const k of Object.keys(st.days).slice(0, 4000)) if (/^\d{4}-\d{2}-\d{2}$/.test(k)) out.days[k] = 1;
@@ -37,12 +38,20 @@ function clean(st) {
     const w = st.week[k];
     if (/^\d{4}-\d{2}-\d{2}$/.test(k) && isObj(w)) out.week[k] = { r: w.r | 0, n: w.n | 0 };
   }
+  const it = st.int;                                                                       // interesi: područja i prijedlozi tema
+  if (isObj(it) && typeof it.cu === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(it.cu)) {
+    const c = {}; if (isObj(it.c)) for (const k of INTERESTS) if (it.c[k]) c[k] = 1;
+    const ideas = Array.isArray(it.ideas) ? it.ideas.filter(t => typeof t === 'string').map(t => t.replace(/[\u0000-\u001f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60)).filter(t => t.length >= 2).slice(0, 8) : [];
+    out.int = { cu: it.cu, c, ideas };
+  }
   return out;
 }
 
+const INTERESTS = ['pov', 'ant', 'geo', 'inf'];
 const rank = s => (s.rev || 0) * 100 + (s.box || 0);
 function merge(a, b) {
   const out = { f: {}, days: Object.assign({}, a.days, b.days), week: Object.assign({}, a.week, b.week) };
+  const ia = a.int, ib = b.int; if (ia || ib) out.int = !ia ? ib : !ib ? ia : (ib.cu >= ia.cu ? ib : ia);
   for (const k of new Set([...Object.keys(a.f), ...Object.keys(b.f)])) {
     const x = a.f[k], y = b.f[k];
     out.f[k] = !x ? y : !y ? x : withReply(x, y, rank(x) >= rank(y) ? x : y);
@@ -55,6 +64,8 @@ function withReply(x, y, winner) {
   const m = ((y && y.mt) || '') >= ((x && x.mt) || '') ? y : x;
   if (m && m.msg) { o.msg = m.msg; o.mt = m.mt; }
   const re = (y && y.re) || (x && x.re); if (re) o.re = re;
+  const l = ((y && y.lt) || '') >= ((x && x.lt) || '') ? y : x; delete o.lk; delete o.lt;
+  if (l && l.lt) { o.lk = l.lk; o.lt = l.lt; }
   return o;
 }
 
@@ -69,7 +80,7 @@ function rankOf(st) {
 function summary(st, titles) {
   const letters = Object.keys(st.f).map(Number).sort((a, b) => a - b).map(i => {
     const s = st.f[i];
-    return { i, title: titles[i] || '', score: s.r.filter(Boolean).length, d: s.d, due: s.due, learned: s.due == null, re: s.re || '', msg: s.msg || '', mt: s.mt || '' };
+    return { i, title: titles[i] || '', score: s.r.filter(Boolean).length, d: s.d, due: s.due, learned: s.due == null, re: s.re || '', msg: s.msg || '', mt: s.mt || '', lk: s.lk ? 1 : 0 };
   });
   const days = Object.keys(st.days).sort();
   let streak = 0, cursor = days.length ? new Date(days[days.length - 1] + 'T12:00:00Z') : null;
@@ -77,7 +88,7 @@ function summary(st, titles) {
   return {
     n: letters.length, total: titles.length, perfect: letters.filter(l => l.score === 3).length, learned: letters.filter(l => l.learned).length,
     streak, last: days.length ? days[days.length - 1] : null, weeks: Object.keys(st.week).length, letters,
-    points: pointsOf(st), rank: rankOf(st).name,
+    points: pointsOf(st), rank: rankOf(st).name, likes: letters.filter(l => l.lk).length, int: st.int || null,
   };
 }
 
