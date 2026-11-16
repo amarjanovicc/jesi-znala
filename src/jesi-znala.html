@@ -669,13 +669,18 @@ async function pushNow() {
   if (!API || !SY.code) return;
   if (busy) { await busy; return pushNow(); }
   const snap = () => JSON.stringify([S.f, S.week, S.int, SY.err, SY.last && V.name === 'sync' ? +SY.last : 0]), s0 = snap();
-  busy = pushOnce(); await busy; busy = null;
+  busy = pushOnce(); const again = await busy; busy = null;
+  if (again) return pushNow();   // dok je zahtjev letio, nešto je promijenjeno: pošalji i to, ne gubi
   // iscrtaj ponovno samo ako se nešto promijenilo, inače bi se gumb zamijenio usred njezina dodira
   if ((V.name === 'home' || V.name === 'sync') && snap() !== s0) paint(false);
 }
-async function pushOnce() {
+const stateKey = () => JSON.stringify([S.f, S.days, S.week, S.int, S.fb]);
+async function pushOnce() {   // vraća true ako se stanje promijenilo dok je zahtjev letio
   try {
+    const sent = stateKey();
     const r = await api('POST', '/api/progress', { code: SY.code, watch: SY.watch, rv: SY.rv | 0, state: { f: S.f, days: S.days, week: S.week || {}, int: S.int, fb: S.fb || [] } });
+    // ako je za vrijeme zahtjeva upisala nešto novo (♥, reakcija, poruka), odgovor poslužitelja ga ne smije prebrisati
+    if (r.ok && r.j && r.j.state && stateKey() !== sent) return true;
     if (r.ok && r.j && r.j.state) {
       const m = r.j.state; S = { f: m.f || {}, days: m.days || {}, week: m.week || {}, int: m.int || S.int, fb: m.fb || S.fb || [], snd: S.snd }; localOnly();
       if ((r.j.watch && r.j.watch !== SY.watch) || (r.j.rv | 0) !== (SY.rv | 0)) { SY.watch = r.j.watch || SY.watch; SY.rv = r.j.rv | 0; saveSY(); }

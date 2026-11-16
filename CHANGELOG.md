@@ -2,6 +2,11 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.3.2] - 2026-11-16
+
+### Ispravak
+- Ako bi nešto označila (♥, reakcija, poruka) dok je sinkronizacija bila u tijeku, odgovor poslužitelja prebrisao bi to na njezinu uređaju i nije stizalo adminu. Sad se takva promjena sačuva i pošalje u sljedećem krugu. Nađeno probom na produkciji.
+
 ## [1.3.1] - 2026-11-16
 
 Provjera igre i admina prema stručnim smjernicama (Vercel Web Interface Guidelines, Anthropic frontend-design, UX i pristupačnost).
