@@ -2,6 +2,26 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.3.1] - 2026-11-16
+
+Provjera igre i admina prema stručnim smjernicama (Vercel Web Interface Guidelines, Anthropic frontend-design, UX i pristupačnost).
+
+### Igra
+- Između pitanja miče se samo dopisnica, bez praznog ekrana; animacije na početnom ekranu kraće.
+- „Poslano" se prikazuje tek kad poruka stvarno stigne na server; inače „Spremljeno, poslat ću čim bude veze."
+- Na „Tvom ukusu" napola napisan tekst više se ne briše kad označiš kategoriju ili dodaš temu; jasne poruke za praznu, kratku ili ponovljenu temu.
+- Neaktivni gumb izgleda kao prazan utor, a ne kao pokvaren gumb; odgovori, kartice i mali gumbi reagiraju na dodir.
+- Klizač za procjenu broja traži da ga pomakneš prije potvrde.
+- Donja traka se makne dok tipkaš, a „Točno!" više nije ispod nje.
+- Potvrda brisanja napretka kaže što će se obrisati.
+- Postavka telefona „Smanji kretanje" sad se poštuje (efekt otvaranja i dalje se može uključiti).
+- Pristupačnost: tamniji sivi tekst (kontrast AA), čitač ekrana čuje točno/netočno, fokus prati promjenu ekrana, preskok otvaranja je pravi gumb (i Esc), bolje oznake za album, vize i napredak.
+- Igra se ne iscrtava ponovno usred dodira kad sinkronizacija ništa nije promijenila; brži prvi prikaz fonta.
+
+### Admin
+- Tablica poruka na mobitelu više ne pomiče stupce; dugi tekst se lomi umjesto da širi stranicu.
+- Natpisi su povezani s poljima, redovi se otvaraju i tipkovnicom, kartice su prava navigacija, rubovi polja su vidljiviji.
+
 ## [1.3.0] - 2026-11-16
 
 ### Igra

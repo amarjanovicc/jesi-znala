@@ -37,13 +37,13 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Jesi znala?</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Caveat:wght@500;700&family=Courier+Prime:wght@400;700&display=swap" media="print" onload="this.media=&quot;all&quot;"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Caveat:wght@500;700&family=Courier+Prime:wght@400;700&display=swap"></noscript>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Caveat:wght@500;700&family=Courier+Prime:wght@400;700&display=swap" media="print" onload="this.media=&quot;all&quot;"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Caveat:wght@500;700&family=Courier+Prime:wght@400;700&display=swap"></noscript>
 <style>
 /* Jedan svijet, namjerno samo svijetao: radni stol s uzorkom iz unutrašnjosti omotnice, a na njemu stvarni predmeti:
    omotnica, pismo otipkano na stroju, dopisnica za odgovor i crni album za marke. Tri tinte: strojna, kemijska i crvena. */
 :root {
   --desk: #CBD9E5; --desk-line: rgba(39,67,160,.10);
-  --ink: #1C2A44; --soft: #566179; --pen: #2743A0; --red: #C8322F; --green: #2E7D4F;
+  --ink: #1C2A44; --soft: #465068; --pen: #2743A0; --red: #C8322F; --green: #2E7D4F;
   --env: #F8F5EE; --letter: #EFE3C6; --card: #FBF9F3; --rule: rgba(28,42,68,.22);
   --book: #22252B; --book-ink: #EDE7D8; --book-soft: #96928A; --strip: rgba(255,255,255,.07);
   --pov: #A3402E; --geo: #17766A; --inf: #4B3FB0; --ant: #7A5A12; --stamp: #FCFBF6;
@@ -56,7 +56,7 @@
 }
 * { box-sizing: border-box }
 html, body { height: 100% }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100% }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) }   /* ljepljiva traka ne prekriva "Točno!" */
 body { color: var(--ink); font: 16px/1.55 var(--type); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
   background: repeating-linear-gradient(45deg, var(--desk-line) 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, var(--desk-line) 0 1px, transparent 1px 6px), var(--desk);
   padding-block: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
@@ -68,13 +68,17 @@ h1, h2, h3, p, ul { margin: 0; padding: 0 }
 .pov { --cat: var(--pov) } .geo { --cat: var(--geo) } .inf { --cat: var(--inf) } .ant { --cat: var(--ant) }
 
 .view { flex: 1; display: flex; flex-direction: column; gap: 20px; padding-block: 18px 30px }
-.view.anim > *, .pop { animation: rise .45s var(--out) both; animation-delay: calc(var(--i, 0) * 60ms) }
+.view.anim > *, .pop { animation: rise .45s var(--out) both; animation-delay: calc(min(var(--i, 0), 4) * 60ms) }
+.view.step > .card { animation: rise .28s var(--out) both }   /* između pitanja miče se samo kartica, ostatak ekrana stoji */
 @keyframes rise { from { opacity: 0; transform: translateY(10px) } }
 
 /* rukopis i tipkani tekst */
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 4px 2px 0 }
 .title { font: 700 44px/0.9 var(--hand); color: var(--pen); transform: rotate(-3deg); transform-origin: left bottom }
-.hand-s { font: 500 23px/1 var(--hand); color: var(--red); transform: rotate(2deg) }
+.hand-s { font: 500 23px/1 var(--hand); color: #A82A27; transform: rotate(2deg) }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+[tabindex="-1"]:focus { outline: none }
+.book :focus-visible { outline-color: var(--book-ink) }
 .say { font-size: 15px; line-height: 1.5; color: var(--soft); text-wrap: pretty }
 .back { font: 500 24px/1 var(--hand); color: var(--pen); min-height: 44px; align-self: flex-start; padding-right: 10px }
 
@@ -82,10 +86,13 @@ h1, h2, h3, p, ul { margin: 0; padding: 0 }
 .btn { background: var(--ink); color: var(--env); font: 700 15px/1 var(--type); letter-spacing: .14em; text-transform: uppercase; border-radius: 2px; min-height: 54px; padding: 0 18px;
   display: flex; align-items: center; justify-content: center; text-align: center; text-decoration: none; transition: transform .12s ease-out, opacity .2s ease }
 .btn:active:not(:disabled) { transform: scale(.97) }
-.btn:disabled { opacity: .3; cursor: default }
+.btn:disabled { cursor: default; background: transparent; color: var(--soft); box-shadow: inset 0 0 0 1.5px var(--rule); letter-spacing: .08em }
+.btn.alt:disabled { color: var(--soft); box-shadow: inset 0 0 0 1.5px var(--rule) }
 .btn.alt { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink) }
 .dock { position: sticky; bottom: 0; margin-top: auto; display: flex; gap: 10px; padding-block: 16px calc(14px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--desk) 34%) }
 .dock .btn { flex: 1 }
+.view:has(textarea:focus, input:not([type=range]):focus) .dock { position: static }   /* dok tipka, traka ne prekriva polje iznad tipkovnice */
+.back:active, .foot button:active, .ideas button:active { opacity: .55 }
 @media (hover: hover) { .btn:hover:not(:disabled) { opacity: .86 } }
 
 /* omotnica */
@@ -124,6 +131,8 @@ button.env:active { transform: rotate(-1deg) scale(.985) }
 .slip { background: var(--card); box-shadow: var(--lift); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; transform: rotate(.6deg); border-left: 5px solid var(--red); font-size: 15px; line-height: 1.4; width: 100% }
 .slip b { font: 700 13px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase; color: var(--red); display: block; margin-bottom: 4px }
 .slip.week { border-left-color: var(--pen); transform: rotate(-.6deg) } .slip.week b { color: var(--pen) }
+button.slip { transition: transform .12s ease-out }
+button.slip:active { transform: rotate(.6deg) scale(.98) } button.slip.week:active { transform: rotate(-.6deg) scale(.98) }
 .slip u { font: 700 24px/1 var(--hand); color: var(--pen); text-decoration: none; white-space: nowrap }
 
 /* album: crna stranica s trakama, kao u pravom albumu za marke */
@@ -176,8 +185,9 @@ button.cell:active { transform: scale(.95) }
 .card-h { display: flex; justify-content: space-between; gap: 10px; font: 700 13px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase; color: var(--cat, var(--soft)); border-bottom: 1.5px solid var(--ink); padding-bottom: 9px; font-variant-numeric: tabular-nums }
 .q { font: 700 19px/1.35 var(--type); text-wrap: balance }
 .opts { display: flex; flex-direction: column }
-.opt { display: grid; grid-template-columns: 22px 1fr; gap: 13px; align-items: start; padding: 13px 4px; min-height: 52px; border-top: 1px dashed var(--rule); font-size: 16.5px; line-height: 1.35; width: 100%; transition: opacity .25s ease }
+.opt { display: grid; grid-template-columns: 22px 1fr; gap: 13px; align-items: start; padding: 13px 4px; min-height: 52px; border-top: 1px dashed var(--rule); font-size: 16.5px; line-height: 1.35; width: 100%; transition: opacity .25s ease, background-color .12s ease }
 .opt:disabled { cursor: default }
+.opt:active:not(:disabled) { background: rgba(28,42,68,.06) }
 .box { width: 20px; height: 20px; border: 1.5px solid var(--ink); margin-top: 1px; position: relative; display: block }
 .box svg { position: absolute; left: -2px; top: -11px; width: 30px; height: 30px; fill: none; stroke: var(--pen); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 42; stroke-dashoffset: 42 }
 .opt.picked .box svg { animation: draw .28s ease-out forwards }
@@ -187,8 +197,8 @@ button.cell:active { transform: scale(.95) }
 @keyframes strike { from { transform: rotate(-1deg) scaleX(0) } }
 .opt.right .txt::before { content: ""; position: absolute; inset: -6px -12px; border: 2.5px solid var(--green); border-radius: 50% / 60%; transform: rotate(-1.5deg); animation: ring .35s .3s var(--out) both }
 @keyframes ring { from { opacity: 0; transform: rotate(-1.5deg) scale(1.18) } }
-.opt.dim { opacity: .4 }
-.marg { font: 700 30px/1 var(--hand); transform: rotate(-2deg); align-self: flex-start; padding: 2px 4px 10px; scroll-margin: 20px }
+.opt.dim { opacity: .6 }
+.marg { font: 700 30px/1 var(--hand); transform: rotate(-2deg); align-self: flex-start; padding: 2px 4px 10px }
 .marg.y { color: var(--green) } .marg.n { color: var(--red) }
 .num { display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px }
 .num output { font: 700 52px/1.1 var(--type); text-align: center; font-variant-numeric: tabular-nums }
@@ -271,7 +281,7 @@ button.cell:active { transform: scale(.95) }
 .end .hand { align-self: center }
 
 /* otvaranje pisma nožem */
-.opening { flex: 1; min-height: 70vh; min-height: 70svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; padding-top: 150px; cursor: pointer; transition: opacity .25s ease }
+.opening { flex: 1; min-height: 70vh; min-height: 70svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; padding-top: 150px; cursor: pointer; transition: opacity .25s ease; width: 100%; text-align: center }
 .opening.leave { opacity: 0 }
 .oenv { position: relative; display: grid; width: 100%; max-width: 400px; filter: drop-shadow(0 1px 2px rgba(28,42,68,.25)) drop-shadow(0 12px 18px rgba(28,42,68,.22)); animation: oin .5s var(--out) both }
 @keyframes oin { from { opacity: 0; transform: translateY(26px) rotate(-3deg) } }
@@ -287,18 +297,20 @@ button.cell:active { transform: scale(.95) }
 .oenv .knife { position: absolute; top: -5px; width: 160px; left: -160px; transform-origin: 100% 50%; animation: sweep .8s linear .45s both, kout .35s ease 1.25s forwards; filter: drop-shadow(0 3px 3px rgba(0,0,0,.28)) }
 @keyframes sweep { from { left: -160px; transform: rotate(5deg) } 50% { transform: rotate(2deg) } to { left: calc(100% + 24px); transform: rotate(5deg) } }
 @keyframes kout { to { opacity: 0; transform: translate(40px,-30px) rotate(-10deg) } }
-.ohint { opacity: .8 }
+.ohint { opacity: 1 }
 @media (prefers-reduced-motion: reduce) {
   html:not(.fx) .oenv, html:not(.fx) .oenv .oc.top, html:not(.fx) .oenv .oletter, html:not(.fx) .oenv .cutline, html:not(.fx) .oenv .knife { animation: none }
-  html:not(.fx) .view.anim > *, html:not(.fx) .pop, html:not(.fx) .view.anim > .sheet.unfold, html:not(.fx) .pm.thump, html:not(.fx) .frank.fresh .stamp-wrap, html:not(.fx) .pin.real { animation: none }
-  html:not(.fx) .opt.picked .box svg { animation: none; stroke-dashoffset: 0 } html:not(.fx) .opt.wrong .txt::after, html:not(.fx) .opt.right .txt::before { animation: none }
-  html:not(.fx) .btn, html:not(.fx) .env, html:not(.fx) button.cell { transition: none }
+  /* "Efekt otvaranja" vraća samo otvaranje omotnice; sve ostalo kretanje poštuje postavku telefona */
+  .view.anim > *, .view.step > .card, .pop, .view.anim > .sheet.unfold, .pm.thump, .frank.fresh .stamp-wrap, .pin.real { animation: none }
+  .opt.picked .box svg { animation: none; stroke-dashoffset: 0 } .opt.wrong .txt::after, .opt.right .txt::before { animation: none }
+  .btn, .env, button.cell, button.slip { transition: none }
+  button.slip:active { transform: rotate(.6deg) } button.slip.week:active { transform: rotate(-.6deg) }
 }
 </style>
 
 </head>
 <body>
-<div class="app"><main class="view" id="view"><p style="padding:20px 4px;font:15px/1.5 monospace">Učitavam…</p><noscript><p style="padding:20px 4px">Za igru je potreban JavaScript.</p></noscript></main></div>
+<div class="app"><main class="view" id="view"><p style="padding:20px 4px;font:15px/1.5 monospace">Učitavam…</p><noscript><p style="padding:20px 4px">Za igru je potreban JavaScript.</p></noscript></main><p id="sr" class="sr-only" aria-live="polite"></p></div>
 
 <script>
 /* ============ SADRŽAJ ============
@@ -378,7 +390,7 @@ function rankInfo(p) {
 /* ============ STANJE (samo u ovom pregledniku) ============ */
 const KEY = 'jesi-znala-v2';
 const FXK = 'jesi-znala-fx';
-const BUILD = '16.11. 10:54';
+const BUILD = '16.11. 15:58';
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 let FX = true; try { FX = localStorage.getItem(FXK) !== '0'; } catch (e) {}   // zadano uključeno, i uz smanjeno kretanje na uređaju
 document.documentElement.classList.toggle('fx', FX);
@@ -456,11 +468,20 @@ function sheet(i, fresh) {
 
 /* ============ ZASLONI ============ */
 let V = { name: 'home' };
-function go(name, data, anim = true) { V = Object.assign({ name }, data); paint(anim); window.scrollTo(0, 0); }
+const announce = t => { const s = $('sr'); if (!s) return; s.textContent = ''; setTimeout(() => { s.textContent = t; }, 50); };
+function go(name, data, anim = true) {
+  V = Object.assign({ name }, data); paint(anim); window.scrollTo(0, 0);
+  // fokus na naslov novog zaslona, da čitač ekrana zna gdje je (bez skakanja i bez vidljivog okvira)
+  const t = $('view').querySelector('h1, .big, .end .hand, .card-h, .sheet h2, button.opening');
+  if (t) { if (!/^(BUTTON|A)$/.test(t.tagName)) t.tabIndex = -1; t.focus({ preventScroll: true }); }
+}
 function paint(anim) {
-  const el = $('view');
+  const el = $('view'), keep = {};
+  // osvježavanje istog zaslona (sinkronizacija u pozadini, oznaka kategorije…) ne smije obrisati napola napisan tekst
+  if (!anim) el.querySelectorAll('input[id]:not([type=range]),textarea[id]').forEach(x => { keep[x.id] = x.value; });
   el.innerHTML = VIEWS[V.name]();
-  el.className = 'view' + (anim ? ' anim' : '');
+  for (const id in keep) { const x = $(id); if (x && !x.disabled) x.value = keep[id]; }
+  el.className = 'view' + (anim === 'step' ? ' step' : anim ? ' anim' : '');
   [...el.children].forEach((c, i) => c.style.setProperty('--i', i));
   tick();
 }
@@ -473,7 +494,7 @@ const VIEWS = {
     const u = unlocked(), nx = nextUnplayed(), t = u - 1, due = dueList(), c = counts(), s = streak(), have = earned();
     let h = '<header class="head"><h1 class="title">Jesi znala?</h1>' + (s > 1 ? '<span class="hand-s">' + s + '. dan zaredom</span>' : '') + '</header>';
     if (nx != null) {
-      h += '<button class="env" data-act="open" data-i="' + nx + '" aria-label="Otvori pismo">' + envTop(nx) + '<span class="addr"><span>Za tebe,</span><span>' + FACTS[nx].q + '</span></span></button>' +
+      h += '<button class="env" data-act="open" data-i="' + nx + '" aria-label="Otvori pismo: ' + FACTS[nx].q.replace(/"/g, '&quot;') + '">' + envTop(nx) + '<span class="addr"><span>Za tebe,</span><span>' + FACTS[nx].q + '</span></span></button>' +
         '<p class="say">' + (nx !== t ? 'Ovo pismo čeka od ' + longDate(dateOf(nx)) + ' Stara pošta ne propada, otvori je kad stigneš.' : c.n ? 'Stiglo je danas. Odgovor na pitanje s omotnice čeka unutra.' : 'Svaki dan stigne jedno pismo. Pročitaš ga, odgovoriš na tri pitanja i marka je tvoja.') + '</p>' +
         '<button class="btn" data-act="open" data-i="' + nx + '">Otvori pismo</button>';
     } else {
@@ -492,23 +513,23 @@ const VIEWS = {
     h += '<section class="pass" aria-label="Putovnica"><div class="pass-cover"><svg class="pass-emblem" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="20" cy="20" r="15"/><ellipse cx="20" cy="20" rx="6.5" ry="15"/><path d="M5 20h30M8 12h24M8 28h24"/></svg>' +
       '<div><div class="pass-t">Putovnica</div><div class="pass-s">Jesi znala?</div></div><div class="pass-n">Čin<br>' + (rk.i + 1) + ' / ' + RANKS.length + '</div></div>' +
       '<div class="pass-page"><div class="pass-grid"><div><small>Čin</small><span class="rk-name">' + rk.name + '</span></div><div><small>' + plural(rk.p, 'Bod', 'Boda', 'Bodova') + '</small><span class="rk-pts">' + rk.p + '</span></div></div>' +
-      '<div class="rk-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + rk.pct + '"><i style="width:' + rk.pct + '%"></i></div>' +
+      '<div class="rk-bar" role="progressbar" aria-label="Napredak do sljedećeg čina" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + rk.pct + '"' + (rk.next ? ' aria-valuetext="Još ' + left + ' ' + plural(left, 'bod', 'boda', 'bodova') + ' do čina ' + rk.next.name + '"' : '') + '><i style="width:' + rk.pct + '%"></i></div>' +
       '<p class="rk-next">' + (rk.next ? 'Još ' + left + ' ' + plural(left, 'bod', 'boda', 'bodova') + ' do čina „' + rk.next.name + '”. ' : 'Najviši čin. ') + 'Pismo vrijedi 2 boda, čisti žig +1, zapamćeno +2.</p>' +
-      '<ul class="visas">' + SEALS.map((x, k) => '<li' + (have.includes(x.id) ? ' class="on" style="--vc:' + VC[k % 3] + ';--va:' + VA[k % 3] + 'deg"' : '') + '><span class="vz">' + x.g + '</span>' + x.t + '</li>').join('') + '</ul>' +
+      '<ul class="visas">' + SEALS.map((x, k) => '<li' + (have.includes(x.id) ? ' class="on" style="--vc:' + VC[k % 3] + ';--va:' + VA[k % 3] + 'deg"' : '') + '><span class="vz" aria-hidden="true">' + x.g + '</span>' + x.t + '<span class="sr-only">' + (have.includes(x.id) ? ', osvojeno' : ', još nije osvojeno') + '</span></li>').join('') + '</ul>' +
       '<div class="mrz" aria-hidden="true"><span>' + fill36('P<JZN<<' + mrz(rk.name)) + '</span><span>' + fill36(String(rk.p).padStart(5, '0') + '<BODOVA<' + String(c.n).padStart(3, '0') + '<PISAMA') + '</span></div></div></section>';
     { const ic = S.int ? Object.keys(S.int.c || {}).filter(k => S.int.c[k]).length : 0, lc = Object.values(S.f).filter(x => x.lk).length;
       h += '<button class="slip" data-act="interests"><span><b>Tvoj ukus</b>' + (ic || lc ? (ic ? ic + ' ' + plural(ic, 'područje', 'područja', 'područja') + ' interesa' : '') + (ic && lc ? ', ' : '') + (lc ? lc + ' ♥' : '') : 'Označi što te zanima, predloži temu ili mi javi bilo što.') + '</span><u>Otvori ›</u></button>'; }
     h += '<section class="book"><div class="book-h"><h2>Album</h2><span>' + c.n + ' / ' + FACTS.length + '</span></div><div class="grid">';
     FACTS.forEach((f, i) => {
       const st = S.f[i];
-      if (st) { const n = st.r.filter(Boolean).length; h += '<button class="cell" data-act="open" data-i="' + i + '" aria-label="' + f.title + '">' + stamp(i, 'sm') + '<span class="sc' + (n === 3 ? ' full' : '') + '">' + (st.due == null ? 'zapamćeno' : n + '/3') + (st.lk ? ' ♥' : '') + '</span></button>'; }
+      if (st) { const n = st.r.filter(Boolean).length; h += '<button class="cell" data-act="open" data-i="' + i + '" aria-label="' + f.title + ', ' + (st.due == null ? 'zapamćeno' : n + ' od 3') + (st.lk ? ', sviđa ti se' : '') + '">' + stamp(i, 'sm') + '<span class="sc' + (n === 3 ? ' full' : '') + '">' + (st.due == null ? 'zapamćeno' : n + '/3') + (st.lk ? ' ♥' : '') + '</span></button>'; }
       else if (i < u) h += '<button class="cell empty wait" data-act="open" data-i="' + i + '" aria-label="Neotvoreno pismo ' + no(i) + '"><span>' + no(i) + '<small>čeka</small></span></button>';
       else h += '<span class="cell empty">' + no(i) + '</span>';
     });
     const nextSeal = SEALS.find(x => x.need && !have.includes(x.id));
     h += '</div><p class="goal">' + (nextSeal ? 'Još <b>' + (nextSeal.need - c.n) + ' ' + plural(nextSeal.need - c.n, 'pismo', 'pisma', 'pisama') + '</b> do vize „' + nextSeal.t + '”.'
       : c.n < FACTS.length ? 'Još <b>' + (FACTS.length - c.n) + '</b> do pune stranice albuma.' : 'Stranica je puna. Zapamćeno: <b>' + c.learned + ' / ' + FACTS.length + '</b>.') + '</p></section>';
-    h += '<footer class="foot"><span class="ver">verzija ' + BUILD + ' · kretanje: ' + (reducedMotion() ? (FX ? 'smanjeno, efekt uključen' : 'smanjeno na uređaju') : 'puno') + '</span>' + (reducedMotion() ? '<button data-act="fx">Efekt otvaranja: ' + (FX ? 'uključen' : 'uključi') + '</button>' : '') + (API ? '<button data-act="syncview">Sinkronizacija' + (SY.code ? ' ✓' : '') + '</button>' : '') + '<button data-act="snd">Zvuk: ' + (sndOn() ? 'uključen' : 'isključen') + '</button>' + (V.ask ? '<button data-act="wipe">Da, obriši sve</button><button data-act="noask">Odustani</button>' : c.n ? '<button data-act="ask">Obriši napredak</button>' : '') + '</footer>';
+    h += '<footer class="foot"><span class="ver">verzija ' + BUILD + (reducedMotion() ? ' · smanjeno kretanje' : '') + '</span>' + (reducedMotion() ? '<button data-act="fx">Efekt otvaranja: ' + (FX ? 'uključen' : 'uključi') + '</button>' : '') + (API ? '<button data-act="syncview">Sinkronizacija' + (SY.code ? ' ✓' : '') + '</button>' : '') + '<button data-act="snd">Zvuk: ' + (sndOn() ? 'uključen' : 'isključen') + '</button>' + (V.ask ? '<p class="msg" style="width:100%;text-align:center;padding-top:8px">Obrisat ćeš ' + c.n + ' ' + plural(c.n, 'marku', 'marke', 'maraka') + ', bodove i čin. To se ne može vratiti.</p><button data-act="wipe">Da, obriši sve</button><button data-act="noask">Odustani</button>' : c.n ? '<button data-act="ask">Obriši napredak</button>' : '') + '</footer>';
     return h;
   },
 
@@ -519,11 +540,11 @@ const VIEWS = {
     let body;
     if (isNum) {
       const m = f.num, v = Math.round((m.min + m.max) / 2 / m.step) * m.step;
-      body = '<div class="num" id="num"><output id="numv" for="rng">' + v + m.unit + '</output><input id="rng" type="range" min="' + m.min + '" max="' + m.max + '" step="' + m.step + '" value="' + v + '" aria-label="Tvoj odgovor">' +
+      body = '<div class="num" id="num"><output id="numv" for="rng">' + v + m.unit + '</output><input id="rng" type="range" min="' + m.min + '" max="' + m.max + '" step="' + m.step + '" value="' + v + '" aria-label="Tvoj odgovor" aria-valuetext="' + v + m.unit + '">' +
         '<div class="ends"><span>' + m.min + m.unit + '</span><span>' + m.max + m.unit + '</span></div></div>';
     } else body = optsHtml(item);
     return '<button class="back" data-act="home">‹ natrag</button><section class="card ' + f.cat + '"><div class="card-h"><span>Dopisnica za odgovor</span><span>' + step + ' / 3</span></div><h2 class="q">' + item.q + '</h2>' + body + '</section>' +
-      '<div id="reveal" style="display:contents"></div><div class="dock"><button class="btn" id="main" data-act="main"' + (isNum ? '>Potvrdi' : ' disabled>Označi odgovor') + '</button></div>';
+      '<div id="reveal" style="display:contents"></div><div class="dock"><button class="btn" id="main" data-act="main"' + (isNum ? ' disabled>Pomakni klizač' : ' disabled>Označi odgovor') + '</button></div>';
   },
 
   result() {
@@ -535,7 +556,7 @@ const VIEWS = {
     return '<button class="back" data-act="home">‹ album</button>' +
       '<div class="frank' + (V.fresh ? ' fresh' : '') + '">' + postmark(V.i, V.fresh) + stamp(V.i, 'lg') + '<span class="big">' + big + '</span></div>' +
       (V.rankUp ? '<p class="won">Novi čin: ' + V.rankUp + '!</p>' : '') + (V.won && V.won.length ? '<p class="won">Nova viza: ' + V.won.join(', ') + '!</p>' : '') + '<p class="say">' + when + '</p>' +
-      '<ul class="recap">' + qs.map(x => '<li class="' + (x.ok ? 'y' : 'n') + '"><i>' + (x.ok ? '✓' : '✗') + '</i><div>' + x.q + '<span>' + x.ans + '</span></div></li>').join('') + '</ul>' +
+      '<ul class="recap">' + qs.map(x => '<li class="' + (x.ok ? 'y' : 'n') + '"><i aria-hidden="true">' + (x.ok ? '✓' : '✗') + '</i><div><span class="sr-only">' + (x.ok ? 'Točno: ' : 'Netočno: ') + '</span>' + x.q + '<span>' + x.ans + '</span></div></li>').join('') + '</ul>' +
       likeHtml(st) + replyHtml(st) +
       '<div class="share"><span class="lbl">Javi kako ti je išlo</span><div class="share-row">' + a + WA + t + '">WhatsApp</a>' + a + 'https://twitter.com/intent/tweet?text=' + t + '">X</a><button class="btn alt" data-act="copy">Kopiraj</button></div></div>' +
       sheet(V.i, false) +
@@ -549,17 +570,17 @@ const VIEWS = {
       '<div id="reveal" style="display:contents"></div><div class="dock"><button class="btn" id="main" data-act="main" disabled>Označi odgovor</button></div>';
   },
 
-  open() { return '<div class="opening" data-act="skip" role="button" aria-label="Preskoči">' + openingEnvelope(V.i) + '<p class="hand-s ohint">dodirni za preskok</p></div>'; },
+  open() { return '<button type="button" class="opening" data-act="skip">' + openingEnvelope(V.i) + '<span class="hand-s ohint">dodirni za preskok</span></button>'; },
 
   interests() {
     const it = S.int || { c: {}, ideas: [] }, on = Object.keys(it.c || {}).filter(k => it.c[k]).length, ideas = it.ideas || [];
-    return '<button class="back" data-act="home">‹ natrag</button><section class="card"><div class="card-h"><span>Tvoj ukus</span><span>' + on + ' / ' + Object.keys(CATS).length + '</span></div>' +
+    return '<button class="back" data-act="home">‹ natrag</button><section class="card"><div class="card-h"><span>Tvoj ukus</span><span id="intn">' + on + ' / ' + Object.keys(CATS).length + '</span></div>' +
       '<p class="say">Označi što te zanima. Vidim što voliš i pišem više takvih pisama. Srce ispod pisma pokazuje koja ti se sviđaju.</p>' +
       '<div class="cats">' + Object.keys(CATS).map(c => '<button type="button" class="catbtn ' + c + '" data-act="cat" data-c="' + c + '" aria-pressed="' + !!(it.c || {})[c] + '">' + CATS[c] + '</button>').join('') + '</div>' +
-      '<div class="stack" style="padding-top:16px"><label class="lbl" for="ideaIn">Predloži temu</label><input id="ideaIn" class="code-in" maxlength="60" autocomplete="off" placeholder="npr. Egipat, svemir, tajne službe"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '><button class="btn alt" data-act="idea"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '>Dodaj temu</button>' +
+      '<div class="stack" style="padding-top:16px"><label class="lbl" for="ideaIn">Predloži temu</label><input id="ideaIn" class="code-in" maxlength="60" enterkeyhint="done" autocomplete="off" placeholder="npr. Egipat, svemir, tajne službe"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '><button class="btn alt" data-act="idea"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '>Dodaj temu</button><p class="msg" id="ideast" role="status" style="color:var(--soft)">' + (ideas.length >= IDEA_MAX ? 'Popis je pun (' + IDEA_MAX + '). Ukloni jednu temu za novu.' : '') + '</p>' +
       (ideas.length ? '<ul class="ideas">' + ideas.map((t, i) => '<li><span>' + esc(t) + '</span><button type="button" data-act="rmidea" data-i="' + i + '" aria-label="Ukloni temu">×</button></li>').join('') + '</ul>' : '') +
       '<label class="lbl" for="fbIn" style="margin-top:10px">Javi mi bilo što, bilo kad</label><textarea id="fbIn" class="fb-in" maxlength="280" rows="3" placeholder="Što ti se sviđa, što bi promijenila, što te zanima…"></textarea>' +
-      '<button class="btn alt" data-act="sendfb">Pošalji poruku</button><p class="msg" id="fbst" style="color:var(--green)">' + ((S.fb || []).length ? 'Zadnja poslana: „' + esc(S.fb[S.fb.length - 1].t) + '”' : '') + '</p></div></section>';
+      '<button class="btn alt" data-act="sendfb">Pošalji poruku</button><p class="msg" id="fbst" role="status" style="color:var(--green)">' + ((S.fb || []).length ? 'Zadnja poslana: „' + esc(S.fb[S.fb.length - 1].t) + '”' : '') + '</p></div></section>';
   },
 
   sync() {
@@ -567,12 +588,12 @@ const VIEWS = {
     let h = '<button class="back" data-act="home">‹ natrag</button><section class="card"><div class="card-h"><span>Sinkronizacija</span><span>' + (SY.code ? 'povezano' : 'isključeno') + '</span></div>';
     if (!SY.code) {
       h += '<p class="say">Napredak se nije mogao povezati s poslužiteljem. Spaja mobitel i laptop da napredak bude isti svugdje. Dobiješ i link kojim netko može pratiti napredak, samo pregled.</p><div class="stack"><button class="btn" data-act="syncon">Uključi</button>' +
-        '<label class="lbl" for="codeIn">Već imaš kod?</label><input id="codeIn" class="code-in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="kod s drugog uređaja"><button class="btn alt" data-act="syncjoin">Spoji</button></div>';
+        '<label class="lbl" for="codeIn">Već imaš kod?</label><input id="codeIn" name="code" class="code-in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="kod s drugog uređaja"><button class="btn alt" data-act="syncjoin">Spoji</button></div>';
     } else {
       h += '<div class="stack"><p class="say">' + (SY.err ? '' : SY.last ? 'Zadnja sinkronizacija u ' + pad(SY.last.getHours()) + ':' + pad(SY.last.getMinutes()) + '.' : 'Povezano.') + '</p>' +
         '<span class="lbl">Link za drugi uređaj</span><code class="lnk">' + base + '#sync=' + SY.code + '</code><button class="btn alt" data-act="copylink" data-t="' + base + '#sync=' + SY.code + '">Kopiraj</button>' +
         (SY.watch ? '<span class="lbl">Link za praćenje (samo pregled)</span><code class="lnk">' + base + '#watch=' + SY.watch + '</code><button class="btn alt" data-act="copylink" data-t="' + base + '#watch=' + SY.watch + '">Kopiraj</button>' : '') +
-        '<label class="lbl" for="codeIn">Već imaš kod s drugog uređaja?</label><input id="codeIn" class="code-in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="kod s drugog uređaja"><button class="btn alt" data-act="syncjoin">Spoji</button>' +
+        '<label class="lbl" for="codeIn">Već imaš kod s drugog uređaja?</label><input id="codeIn" name="code" class="code-in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="kod s drugog uređaja"><button class="btn alt" data-act="syncjoin">Spoji</button>' +
         '<button class="back" data-act="syncoff">Odvoji ovaj uređaj (novi ID)</button></div>';
     }
     return h + (SY.err ? '<p class="msg" style="padding-bottom:14px">' + SYMSG[SY.err] + '</p>' : '') + '</section>';
@@ -601,11 +622,13 @@ function optsHtml(item) {
 function markOpts(pick, a) {
   [...$('opts').children].forEach((b, k) => { b.disabled = true;
     if (k === pick) b.classList.add('picked');
-    if (k === a) b.classList.add('right'); else if (k === pick) b.classList.add('wrong'); else b.classList.add('dim'); });
+    if (k === a) b.classList.add('right'); else if (k === pick) b.classList.add('wrong'); else b.classList.add('dim');
+    const s = k === a ? (k === pick ? ' (tvoj odgovor, točno)' : ' (točan odgovor)') : k === pick ? ' (tvoj odgovor, netočno)' : '';
+    if (s) b.querySelector('.txt').insertAdjacentHTML('beforeend', '<span class="sr-only">' + s + '</span>'); });
 }
 function reveal(html, label) {
   const r = $('reveal'); r.innerHTML = html; [...r.children].forEach((c, i) => { c.classList.add('pop'); c.style.setProperty('--i', i + 4); });
-  const m = $('main'); m.disabled = false; m.textContent = label;
+  const m = $('main'); m.disabled = false; m.textContent = label; m.focus({ preventScroll: true }); announce(r.textContent);
   const v = r.firstElementChild;
   if (v) setTimeout(() => v.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' }), 60);
 }
@@ -639,7 +662,7 @@ function main() {
   if (V.name === 'play') {
     if (V.step === 0) return go('play', { i: V.i, step: 1, r: [], answered: false });
     if (!V.answered) return confirmNum();
-    if (V.step < 3) return go('play', { i: V.i, step: V.step + 1, r: V.r, answered: false });
+    if (V.step < 3) return go('play', { i: V.i, step: V.step + 1, r: V.r, answered: false }, 'step');
     const before = earned(), rank0 = rankInfo(pointsOf(S.f)).i;
     S.f[V.i] = { r: V.r, d: ymd(new Date()), box: 0, due: today() + GAPS[0], rev: 0 };
     S.days[ymd(new Date())] = 1; save();
@@ -647,7 +670,7 @@ function main() {
     const rank1 = rankInfo(pointsOf(S.f)); if (rank1.i > rank0) setTimeout(SND.bell, 1200);
     go('result', { i: V.i, fresh: true, rankUp: rank1.i > rank0 ? rank1.name : null, won: SEALS.filter(s => !before.includes(s.id) && earned().includes(s.id)).map(s => s.t) });
   } else if (V.name === 'review') {
-    if (V.pos + 1 < V.queue.length) return go('review', { queue: V.queue, pos: V.pos + 1, right: V.right, before: V.before, rank0: V.rank0, weekly: V.weekly, answered: false });
+    if (V.pos + 1 < V.queue.length) return go('review', { queue: V.queue, pos: V.pos + 1, right: V.right, before: V.before, rank0: V.rank0, weekly: V.weekly, answered: false }, 'step');
     if (V.weekly) { S.week = S.week || {}; S.week[ymd(new Date())] = { r: V.right, n: V.queue.length }; save(); }
     const rk1 = rankInfo(pointsOf(S.f)); if (rk1.i > V.rank0) setTimeout(SND.bell, 300);
     go('reviewEnd', { queue: V.queue, right: V.right, weekly: V.weekly, rankUp: rk1.i > V.rank0 ? rk1.name : null, won: SEALS.filter(s => !V.before.includes(s.id) && earned().includes(s.id)).map(s => s.t) });
@@ -678,12 +701,18 @@ async function api(method, path, body) {
   let j = null; try { j = await r.json(); } catch (e) {}
   return { ok: r.ok, status: r.status, j };
 }
-let pushT = 0, busy = false;
+let pushT = 0, busy = null;
 function schedulePush() { if (!API || !SY.code) return; clearTimeout(pushT); pushT = setTimeout(pushNow, 1200); }
+// vraća obećanje koje se ispuni tek kad je zahtjev stvarno gotov (i kad je prethodni još bio u tijeku), pa "Poslano" nikad ne laže
 async function pushNow() {
   if (!API || !SY.code) return;
-  if (busy) return schedulePush();
-  busy = true;
+  if (busy) { await busy; return pushNow(); }
+  const snap = () => JSON.stringify([S.f, S.week, S.int, SY.err, SY.last && V.name === 'sync' ? +SY.last : 0]), s0 = snap();
+  busy = pushOnce(); await busy; busy = null;
+  // iscrtaj ponovno samo ako se nešto promijenilo, inače bi se gumb zamijenio usred njezina dodira
+  if ((V.name === 'home' || V.name === 'sync') && snap() !== s0) paint(false);
+}
+async function pushOnce() {
   try {
     const r = await api('POST', '/api/progress', { code: SY.code, watch: SY.watch, rv: SY.rv | 0, state: { f: S.f, days: S.days, week: S.week || {}, int: S.int, fb: S.fb || [] } });
     if (r.ok && r.j && r.j.state) {
@@ -692,8 +721,6 @@ async function pushNow() {
       SY.err = null; SY.last = new Date();
     } else SY.err = r.status === 503 ? 'nostore' : 'fail';
   } catch (e) { SY.err = 'fail'; }
-  busy = false;
-  if (V.name === 'home' || V.name === 'sync') paint(false);
 }
 function enrol() { SY = { code: rnd(16), watch: rnd(16), last: null, err: null, rv: 0 }; saveSY(); }
 async function syncOn() {
@@ -725,7 +752,7 @@ function initSync() {
   }
   if (!SY.code) { const ck = getCk(); if (ck) { SY = { code: ck, watch: null, last: null, err: null, rv: 0 }; saveSY(); } else enrol(); }   // vrati ID iz kolačića ili ga napravi
   fetch('/api/facts').then(r => r.json()).then(j => {
-    if (Array.isArray(j) && j.length >= FACTS.length && j.every(x => x && x.title && x.story && x.cat && Array.isArray(x.quiz) && x.quiz.length === 2)) { FACTS = j.map(deepEsc); if (V.name === 'home') paint(false); }
+    if (Array.isArray(j) && j.length >= FACTS.length && j.every(x => x && x.title && x.story && x.cat && Array.isArray(x.quiz) && x.quiz.length === 2)) { const nf = j.map(deepEsc); if (JSON.stringify(nf) !== JSON.stringify(FACTS)) { FACTS = nf; if (V.name === 'home') paint(false); } }
   }).catch(() => {});
   if (SY.code) pushNow();
   document.addEventListener('visibilitychange', () => { if (!document.hidden && SY.code) pushNow(); });
@@ -813,14 +840,17 @@ function replyHtml(st) {
   const b = (v, t) => '<button type="button" data-act="re" data-v="' + v + '" aria-pressed="' + (st.re === v) + '">' + t + '</button>';
   return '<section class="reply"><span class="lbl">Što misliš o ovom pismu?</span><div class="re-row">' + b('z', 'Zanimljivo!') + b('k', 'Već sam znala') + b('n', 'Nisam znala') + '</div>' +
     '<label class="lbl" for="msg">Napiši mi nešto (neobavezno)</label><textarea id="msg" maxlength="280" rows="3" placeholder="Poruka o ovom pismu"></textarea>' +
-    '<div class="re-row"><button type="button" class="btn alt" data-act="sendmsg" style="flex:0 0 auto">Pošalji poruku</button><span class="sent" id="msgst">' + (st.msg ? 'Poslano: „' + esc(st.msg) + '”' : '') + '</span></div></section>';
+    '<div class="re-row"><button type="button" class="btn alt" data-act="sendmsg" style="flex:0 0 auto">Pošalji poruku</button><span class="sent" id="msgst" role="status">' + (st.msg ? 'Poslano: „' + esc(st.msg) + '”' : '') + '</span></div></section>';
 }
+const NOT_SENT = 'Spremljeno, poslat ću čim bude veze.';
 async function sendMsg(btn) {
-  const ta = $('msg'), t = (ta.value || '').trim().slice(0, 280), st = S.f[V.i];
-  if (!t || !st) return;
-  st.msg = t; st.mt = new Date().toISOString(); save(); btn.disabled = true; $('msgst').textContent = 'Šaljem…';
+  const ta = $('msg'), t = (ta.value || '').trim().slice(0, 280), st = S.f[V.i], out = $('msgst');
+  if (!st) return;
+  if (!t) { out.textContent = 'Prvo napiši poruku.'; ta.focus(); return; }
+  st.msg = t; st.mt = new Date().toISOString(); save(); btn.disabled = true; out.textContent = 'Šaljem…';
   clearTimeout(pushT); await pushNow(); btn.disabled = false;
-  $('msgst').textContent = SY.err ? 'Nije poslano, probaj malo kasnije.' : 'Poslano!';
+  if (!out.isConnected) return;
+  out.textContent = SY.err ? NOT_SENT : 'Poslano: „' + t + '”';
   if (!SY.err) ta.value = '';
 }
 
@@ -829,7 +859,7 @@ function shareText() {
   return 'Jesi znala? Pismo № ' + no(V.i) + ': ' + f.title + '\n' + r.map(x => x ? '🟩' : '🟥').join('') + ' ' + r.filter(Boolean).length + '/3' + (s > 1 ? ' · ' + s + '. dan zaredom' : '') + '\nČin: ' + rankInfo(pointsOf(S.f)).name;
 }
 function copy(b, txt) {
-  const done = ok => { b.textContent = ok ? 'Kopirano' : 'Nije uspjelo'; };
+  const old = b.textContent, done = ok => { b.textContent = ok ? 'Kopirano' : 'Nije uspjelo'; announce(b.textContent); setTimeout(() => { b.textContent = old; }, 2000); };
   try { navigator.clipboard.writeText(txt).then(() => done(true), () => done(false)); } catch (e) { done(false); }
 }
 function tick() {
@@ -858,34 +888,51 @@ $('view').addEventListener('click', e => {
   else if (a === 're') { const st = S.f[V.i]; if (st) { st.re = b.dataset.v; save(); SND.key(); b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === st.re))); } }
   else if (a === 'like') { const st = S.f[V.i]; if (st) { st.lk = st.lk ? 0 : 1; st.lt = new Date().toISOString(); save(); SND.key(); b.setAttribute('aria-pressed', String(!!st.lk)); b.innerHTML = likeHtml(st).replace(/^<button[^>]*>|<\/button>$/g, ''); } }
   else if (a === 'interests') go('interests');
-  else if (a === 'cat') { S.int = S.int || { c: {}, ideas: [] }; S.int.c[b.dataset.c] = S.int.c[b.dataset.c] ? 0 : 1; S.int.cu = new Date().toISOString(); save(); SND.key(); paint(false); }
+  else if (a === 'cat') { S.int = S.int || { c: {}, ideas: [] }; const c = b.dataset.c, on = S.int.c[c] = S.int.c[c] ? 0 : 1; S.int.cu = new Date().toISOString(); save(); SND.key();
+    b.setAttribute('aria-pressed', String(!!on)); const n = $('intn'); if (n) n.textContent = Object.values(S.int.c).filter(Boolean).length + ' / ' + Object.keys(CATS).length; }
   else if (a === 'idea') addIdea();
   else if (a === 'sendfb') sendFb(b);
-  else if (a === 'rmidea') { if (S.int && S.int.ideas) { S.int.ideas.splice(+b.dataset.i, 1); S.int.cu = new Date().toISOString(); save(); paint(false); } }
+  else if (a === 'rmidea') { if (S.int && S.int.ideas) { S.int.ideas.splice(+b.dataset.i, 1); S.int.cu = new Date().toISOString(); save(); SND.key(); repaintKeepDraft(false); } }
   else if (a === 'sendmsg') sendMsg(b);
   else if (a === 'copy') copy(b, shareText());
   else if (a === 'copyask') copy(b, ASK_MORE);
-  else if (a === 'ask') { go('home', { ask: true }, false); bottom(); }
+  else if (a === 'ask') { go('home', { ask: true }, false); bottom(); const w = document.querySelector('[data-act=wipe]'); if (w) w.focus({ preventScroll: true }); }
   else if (a === 'noask') { go('home', {}, false); bottom(); }
   else if (a === 'wipe') { SY = { code: null, watch: null, last: null, err: null }; saveSY(); S = { f: {}, days: {} }; save(); go('home'); }
 });
-function sendFb(btn) {
-  const el = $('fbIn'), t = el ? el.value.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 280) : '';
-  if (!t) return;
+async function sendFb(btn) {
+  const el = $('fbIn'), out = $('fbst'), t = el ? el.value.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 280) : '';
+  if (!el) return;
+  if (!t) { out.style.color = 'var(--red)'; out.textContent = 'Prvo napiši poruku.'; el.focus(); return; }
   S.fb = (S.fb || []).concat([{ t, d: new Date().toISOString() }]).slice(-20); save(); SND.key();
-  el.value = ''; btn.textContent = 'Poslano ✓'; setTimeout(() => { btn.textContent = 'Pošalji poruku'; }, 2500);
-  const st = $('fbst'); if (st) st.textContent = 'Zadnja poslana: „' + t + '”';
+  out.style.color = 'var(--soft)';
+  if (!API || !SY.code) { el.value = ''; out.textContent = 'Spremljeno na ovom uređaju.'; return; }
+  btn.disabled = true; btn.textContent = 'Šaljem…';
+  clearTimeout(pushT); await pushNow();
+  btn.disabled = false; btn.textContent = 'Pošalji poruku';
+  if (!out.isConnected) return;
+  if (SY.err) { out.textContent = NOT_SENT; return; }
+  el.value = ''; out.style.color = 'var(--green)'; out.textContent = 'Poslano: „' + t + '”';
+}
+function repaintKeepDraft(focusIdea) {
+  paint(false);   // paint(false) sam čuva napisani tekst
+  if (focusIdea && $('ideaIn') && !$('ideaIn').disabled) $('ideaIn').focus();
 }
 function addIdea() {
   const el = $('ideaIn'); if (!el) return;
-  const t = el.value.replace(/\s+/g, ' ').trim().slice(0, 60);
+  const t = el.value.replace(/\s+/g, ' ').trim().slice(0, 60), note = m => { const o = $('ideast'); if (o) o.textContent = m; el.focus(); };
   S.int = S.int || { c: {}, ideas: [] }; S.int.ideas = S.int.ideas || [];
-  if (t.length < 2 || S.int.ideas.length >= IDEA_MAX || S.int.ideas.some(x => x.toLowerCase() === t.toLowerCase())) return;
-  S.int.ideas.push(t); S.int.cu = new Date().toISOString(); save(); SND.key(); paint(false);
+  if (t.length < 2) return note('Upiši temu, barem dva slova.');
+  if (S.int.ideas.length >= IDEA_MAX) return note('Popis je pun (' + IDEA_MAX + '). Ukloni jednu temu za novu.');
+  if (S.int.ideas.some(x => x.toLowerCase() === t.toLowerCase())) return note('Ta tema je već na popisu.');
+  S.int.ideas.push(t); S.int.cu = new Date().toISOString(); save(); SND.key(); el.value = ''; repaintKeepDraft(true);
+  const o = $('ideast'); if (o && !o.textContent) o.textContent = 'Dodano: „' + t + '”';
 }
-$('view').addEventListener('keydown', e => { if (e.target.id === 'ideaIn' && e.key === 'Enter') { e.preventDefault(); addIdea(); } });
-$('view').addEventListener('input', e => { if (e.target.id === 'rng') $('numv').textContent = e.target.value + FACTS[V.i].num.unit; });
+$('view').addEventListener('keydown', e => { if (e.key !== 'Enter') return; if (e.target.id === 'ideaIn') { e.preventDefault(); addIdea(); } else if (e.target.id === 'codeIn') { e.preventDefault(); syncJoin(); } });
+$('view').addEventListener('input', e => { if (e.target.id !== 'rng') return; $('numv').textContent = e.target.value + FACTS[V.i].num.unit; e.target.setAttribute('aria-valuetext', $('numv').textContent);
+  const m = $('main'); if (m && m.disabled && !V.answered) { m.disabled = false; m.textContent = 'Potvrdi'; } });   // potvrda tek kad stvarno procijeni
 document.addEventListener('keydown', e => {
+  if (V.name === 'open' && e.key === 'Escape') return finishOpen();
   if (V.name !== 'play' && V.name !== 'review') return;
   if (e.target.id === 'rng' && e.key !== 'Enter') return;
   const k = '1234'.indexOf(e.key) >= 0 ? +e.key - 1 : 'abcd'.indexOf(e.key.toLowerCase());

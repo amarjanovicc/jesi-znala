@@ -75,7 +75,7 @@ html = f"""<!doctype html>
 """
 html = html.replace('<main class="view" id="view"></main>', '<main class="view" id="view"><p style="padding:20px 4px;font:15px/1.5 monospace">Učitavam…</p><noscript><p style="padding:20px 4px">Za igru je potreban JavaScript.</p></noscript></main>')
 # fontovi ne smiju blokirati iscrtavanje: učitavaju se u pozadini, a do tada vrijede rezervni fontovi
-html, n = re.subn(r'<link rel="stylesheet" href="(https://fonts\.googleapis\.com[^"]+)">', r'<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="\1" media="print" onload="this.media=&quot;all&quot;"><noscript><link rel="stylesheet" href="\1"></noscript>', html)
+html, n = re.subn(r'<link rel="stylesheet" href="(https://fonts\.googleapis\.com[^"]+)">', r'<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="\1" media="print" onload="this.media=&quot;all&quot;"><noscript><link rel="stylesheet" href="\1"></noscript>', html)
 assert n == 1, 'link za fontove nije pronađen'
 open(os.path.join(OUT, 'index.html'), 'w', encoding='utf8').write(html)
 

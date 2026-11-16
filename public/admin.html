@@ -21,7 +21,7 @@ a { color: var(--accent) }
 .tabs { display: flex; gap: 2px; overflow-x: auto; flex: 1; min-width: 0 }
 .tabs button { padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--mute); cursor: pointer; white-space: nowrap }
 .tabs button:hover { color: var(--ink) }
-.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600 }
+.tabs button[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600 }
 .side { align-self: center; display: flex; gap: 14px; white-space: nowrap }
 
 .page { max-width: 1000px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 90px }
@@ -41,13 +41,13 @@ p { margin: 0 0 8px }
 .link.danger { color: var(--danger) }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
 
-input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; padding: 7px 9px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px }
+input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; padding: 7px 9px; background: var(--panel); border: 1px solid var(--mute); border-radius: 3px }
 textarea { min-height: 150px; resize: vertical; line-height: 1.5 }
 label { display: block; font-size: 12px; font-weight: 600; color: var(--mute); margin: 12px 0 3px }
 
 table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line) }
 th { padding: 7px 10px; text-align: left; font-size: 12px; font-weight: 600; color: var(--mute); background: var(--soft); border-bottom: 1px solid var(--line); white-space: nowrap }
-td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere }
 tr:last-child td { border-bottom: 0 }
 tr.click { cursor: pointer }
 tr.click:hover td { background: var(--soft) }
@@ -133,8 +133,17 @@ function h(tag, attrs) {
     else if (k === 'value') el.value = v; else if (v === true) el.setAttribute(k, ''); else if (v !== false && v != null) el.setAttribute(k, v);
   });
   kids.flat(Infinity).forEach(function (c) { if (c != null && c !== false) el.appendChild(c.nodeType ? c : document.createTextNode(String(c))); });
+  if (tag === 'tr' && attrs && attrs.onclick) { el.tabIndex = 0; el.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target === el) attrs.onclick(e); }); }
   return el;
 }
+// natpis bez "for" povezuje se s poljem odmah iza njega, pa dodir na natpis fokusira polje i čitač ekrana zna ime polja
+var lblId = 0;
+new MutationObserver(function () {
+  document.querySelectorAll('label:not([for])').forEach(function (l) {
+    var n = l.nextElementSibling;
+    if (n && /^(INPUT|SELECT|TEXTAREA)$/.test(n.tagName)) { if (!n.id) n.id = 'f' + (++lblId); l.htmlFor = n.id; }
+  });
+}).observe(document.documentElement, { childList: true, subtree: true });
 function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
 function pad(n) { return String(n).padStart(2, '0'); }
 function plural(n, a, b, c) { var m = n % 10, k = n % 100; return m === 1 && k !== 11 ? a : (m >= 2 && m <= 4 && (k < 12 || k > 14)) ? b : c; }
@@ -188,7 +197,7 @@ function go(tab) {
 function render() {
   clearInterval(S.timer); clear(app); document.onkeydown = null;
   app.appendChild(h('div', { class: 'bar' }, h('div', { class: 'brand' }, 'Jesi znala? ', h('span', {}, 'admin')),
-    h('div', { class: 'tabs', role: 'tablist' }, TABS.map(function (t) { return h('button', { role: 'tab', 'aria-selected': S.tab === t[0] ? 'true' : 'false', onclick: function () { go(t[0]); } }, t[1]); })),
+    h('nav', { class: 'tabs', 'aria-label': 'Odjeljci' }, TABS.map(function (t) { return h('button', { 'aria-current': S.tab === t[0] ? 'page' : null, onclick: function () { go(t[0]); } }, t[1]); })),
     h('div', { class: 'side small' }, h('a', { class: 'small-hide', href: '/', target: '_blank', rel: 'noopener' }, 'Igra'), h('button', { class: 'link', onclick: logout }, 'Odjava'))));
   var page = h('div', { class: 'page', id: 'page' }); app.appendChild(page);
   if (S.tab === 'overview') return viewOverview(page);
@@ -224,7 +233,7 @@ async function viewOverview(page) {
   var withMsg = P.filter(function (p) { return p.lastMsg; });
   if (withMsg.length) {
     page.appendChild(h('h2', {}, 'Poruke od nje'));
-    page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Igrač'), h('th', {}, 'Pismo'), h('th', {}, 'Poruka'), h('th', { class: 'hide-s' }, 'Kada'))),
+    page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Igrač'), h('th', { class: 'hide-s' }, 'Pismo'), h('th', {}, 'Poruka'), h('th', { class: 'hide-s' }, 'Kada'))),
       h('tbody', {}, withMsg.map(function (p) { return h('tr', { class: 'click', onclick: function () { S.tab = 'players'; S.pid = p.id; render(); } }, h('td', {}, p.label || 'Bez oznake'), h('td', { class: 'hide-s' }, (p.lastMsg.i >= 0 ? pad(p.lastMsg.i + 1) + ' ' : '') + p.lastMsg.title), h('td', {}, p.lastMsg.msg), h('td', { class: 'hide-s' }, rel(p.lastMsg.mt))); }))));
   }
   var likeTot = {}, intTot = {}, ideaRows = [];
