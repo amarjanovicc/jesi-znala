@@ -103,6 +103,14 @@ details { margin-top: 10px } summary { cursor: pointer }
 [hidden] { display: none !important }
 @media (max-width: 860px) { .edit { grid-template-columns: 1fr } .pv { position: static } .hide-s { display: none } .side .small-hide { display: none } .bar { height: auto; flex-wrap: wrap; gap: 0 12px; padding-top: 8px } .brand { flex: 1; align-self: center } .side { order: 2 } .tabs { order: 3; flex: 1 0 100%; margin: 0 -6px } .tabs button { min-height: 40px } .pv { top: 0 } }
 @media (max-width: 520px) { .two, .three { grid-template-columns: 1fr } }
+/* dodir: polja od 16 px (iOS inače zumira pri fokusu), veće tipke i poveznice */
+@media (pointer: coarse), (max-width: 520px) {
+  input[type=text], input[type=password], input[type=number], select, textarea { font-size: 16px; padding: 10px 11px }
+  .btn { height: 44px; padding: 0 16px } .opt .x { width: 44px; height: 44px }
+  .link { padding: 12px 6px; margin: -12px -6px } td .link { display: inline-block }
+  .tabs button { min-height: 44px } .side button, .side a { padding: 10px 0 }
+  .opt { grid-template-columns: 28px 1fr auto } .opt input[type=radio] { width: 22px; height: 22px }
+}
 </style>
 </head>
 <body>
@@ -329,7 +337,7 @@ function viewEditor(page) {
   };
   var cancel = function () { if (DIRTY && !confirm('Odbaciti izmjene?')) return; DIRTY = false; S.edit = null; render(); };
   page.appendChild(h('div', { style: 'margin-bottom:12px' }, h('button', { class: 'link', onclick: cancel }, '‹ Sva pisma'), h('h1', { style: 'margin-top:6px' }, (isNew ? 'Novo pismo' : 'Pismo') + ' № ' + pad(idx + 1)),
-    h('div', { class: 'mute' }, isNew ? 'Otključava se ' + dm(when) + (when <= t0 ? ' (taj je datum prošao, pa je dostupno odmah)' : '') : (when <= t0 ? 'Objavljeno ' + dm(when) + '. Izmjene vide svi pri sljedećem osvježavanju.' : 'Otključava se ' + dm(when)))));
+    h('div', { class: 'mute' }, isNew ? 'Otključava se ' + dm(when) + (when <= t0 ? ' (taj je datum prošao, pa je dostupno odmah)' : '') : (when <= t0 ? 'Objavljeno ' + dm(when) + ' Izmjene vide svi pri sljedećem osvježavanju.' : 'Otključava se ' + dm(when)))));
   page.appendChild(h('form', { onsubmit: save },
     h('div', { class: 'edit' },
       h('div', {},

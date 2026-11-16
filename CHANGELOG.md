@@ -2,6 +2,19 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.0.1] - 2026-11-16
+
+Prilagodba telefonima (mobile first).
+
+### Igra
+- Otvaranje pisma: omotnica se prilagođava duljini pitanja, pa se na uskim ekranima ništa više ne reže.
+- Najuži telefoni (do 340 px): album ostaje u tri stupca umjesto dva, pa je kraći za trećinu.
+- Veća slova (12 px) za oznake u putovnici, a iOS ne povećava tekst pri okretanju telefona.
+
+### Admin
+- Polja za unos imaju 16 px (iOS više ne zumira pri unosu), a tipke i poveznice veće mete za dodir.
+- Ispravljena dvostruka točka u uputi uz uređivanje pisma.
+
 ## [1.0.0] - 2026-11-14
 
 Prvo javno izdanje.
