@@ -2,6 +2,11 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.5.1] - 2026-11-16
+
+### Sadržaj
+- Svih 35 pisama dobilo je povijesne izvore (2 do 4 po pismu; enciklopedije, znanstveni radovi, arhivi, ugledni mediji). Pronađeni su linkovi, a zatim provjereni da otvaraju stranicu.
+
 ## [1.5.0] - 2026-11-16
 
 ### Igra
