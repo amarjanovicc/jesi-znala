@@ -2,6 +2,12 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.5.2] - 2026-11-16
+
+### Sadržaj
+- Ispravljeno 26 pisama prema provjeri izvora. Najvažnije: Mars Climate Orbiter (konačna visina ~57 km, ne 110 km; promijenjen i kviz), Program A (institut službeno osnovan 1948.; promijenjen i kviz), Stuxnet (Iran je priznao ograničenu štetu), Diana Budisavljević (brojke 7 500 do 15 000, kartoteka oko 12 000), Rab (204 odvedena u Auschwitz, raspon brojki, bez neprovjerene brojke Yad Vashema), SOE i udar 1941. (kontakti, ne sudjelovanje), Colossus (deset do kraja rata), Galaksija (oko 8 000 naručilo komplet).
+- Ublažene su tvrdnje koje su tumačenje, a ne činjenica (npr. ostrakoni „pripremljeni unaprijed", opsada Melosa, grobnica u Ateni, kontroler u Gani).
+
 ## [1.5.1] - 2026-11-16
 
 ### Sadržaj
