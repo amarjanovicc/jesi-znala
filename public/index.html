@@ -377,7 +377,7 @@ function rankInfo(p) {
 /* ============ STANJE (samo u ovom pregledniku) ============ */
 const KEY = 'jesi-znala-v2';
 const FXK = 'jesi-znala-fx';
-const BUILD = '16.11. 10:44';
+const BUILD = '16.11. 10:46';
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 let FX = true; try { FX = localStorage.getItem(FXK) !== '0'; } catch (e) {}   // zadano uključeno, i uz smanjeno kretanje na uređaju
 document.documentElement.classList.toggle('fx', FX);
@@ -760,7 +760,8 @@ function isSunday() { return new Date().getDay() === 0; }
 function weeklyReady() { return isSunday() && Object.keys(S.f).length >= 3 && !(S.week && S.week[ymd(new Date())]); }
 function startWeekly() {
   const all = [];
-  Object.keys(S.f).map(Number).forEach(i => questions(FACTS[i]).forEach((q, qi) => all.push({ i, qi, k: Math.random() })));
+  const fav = i => !!(S.f[i].lk || (S.int && S.int.c && S.int.c[FACTS[i].cat]));   // omiljena područja i pisma češće dođu na red, ali izbor ostaje nasumičan
+  Object.keys(S.f).map(Number).forEach(i => questions(FACTS[i]).forEach((q, qi) => all.push({ i, qi, k: Math.random() * (fav(i) ? 0.45 : 1) })));
   all.sort((a, b) => a.k - b.k);
   const queue = [], seen = {};
   all.forEach(x => { if (queue.length < 5 && !seen[x.i]) { seen[x.i] = 1; queue.push(x); } });

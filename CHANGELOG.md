@@ -2,6 +2,11 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.2.1] - 2026-11-16
+
+### Igra
+- Nedjeljna razglednica češće bira pitanja iz područja koja je označila i pisama koja joj se sviđaju (izbor je i dalje nasumičan).
+
 ## [1.2.0] - 2026-11-16
 
 Ukus i interesi.
