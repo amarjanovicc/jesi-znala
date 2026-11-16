@@ -87,6 +87,27 @@ function rankOf(st) {
   return { points: p, index: i, name: ranks[i] ? ranks[i].name : '' };
 }
 
+// serija: niz dana zaredom do zadnjeg odigranog dana; "živa" je samo ako je taj dan danas ili jučer
+function streakInfo(days, today) {
+  const keys = Object.keys(days || {}).sort(), prev = d => new Date(new Date(d + 'T12:00:00Z').getTime() - 86400000).toISOString().slice(0, 10);
+  let best = 0, run = 0, last = null;
+  for (const k of keys) { run = last && prev(k) === last ? run + 1 : 1; last = k; if (run > best) best = run; }
+  const alive = last && (last === today || last === prev(today));
+  return { cur: alive ? run : 0, best, last, playedToday: last === today };
+}
+// tjedan od ponedjeljka do nedjelje (zagrebsko vrijeme); off = koliko tjedana unatrag
+function weekBounds(off = 0) {
+  const [y, m, d] = zagrebDay().split('-').map(Number), t = new Date(Date.UTC(y, m - 1, d - 7 * off)), mon = new Date(t.getTime() - ((t.getUTCDay() + 6) % 7) * 86400000), f = x => x.toISOString().slice(0, 10);
+  return { from: f(mon), to: f(new Date(mon.getTime() + 6 * 86400000)) };
+}
+// bodovi tjedna: pismo 2, čisti žig +1, nedjeljna razglednica +1 po točnom odgovoru
+function weekPoints(st, b) {
+  let p = 0, n = 0;
+  for (const x of Object.values(st.f)) if (x.d >= b.from && x.d <= b.to) { n++; p += 2 + (x.r.every(Boolean) ? 1 : 0); }
+  for (const [k, w] of Object.entries(st.week || {})) if (k >= b.from && k <= b.to) p += Math.min(5, w.r | 0);
+  return { p, n };
+}
+
 function summary(st, titles) {
   const letters = Object.keys(st.f).map(Number).sort((a, b) => a - b).map(i => {
     const s = st.f[i];
@@ -97,7 +118,7 @@ function summary(st, titles) {
   while (cursor && st.days[cursor.toISOString().slice(0, 10)]) { streak++; cursor = new Date(cursor.getTime() - 86400000); }
   return {
     n: letters.length, total: titles.length, perfect: letters.filter(l => l.score === 3).length, learned: letters.filter(l => l.learned).length,
-    streak, last: days.length ? days[days.length - 1] : null, weeks: Object.keys(st.week).length, letters,
+    streak, best: streakInfo(st.days, zagrebDay()).best, last: days.length ? days[days.length - 1] : null, weeks: Object.keys(st.week).length, letters,
     points: pointsOf(st), rank: rankOf(st).name, likes: letters.filter(l => l.lk).length, int: st.int || null, fb: st.fb || [],
   };
 }
@@ -239,4 +260,4 @@ function todayOf(st, titles) {
   return { i, title: titles[i], played: !!x, score: x ? x.r.filter(Boolean).length : 0, re: (x && x.re) || '', msg: (x && x.msg) || '', learned: !!x && x.due == null };
 }
 
-module.exports = { MAX_DEVICES, deviceOf, zagrebDay, todayIndex, todayOf, redis, valid, isObj, clean, merge, summary, rankOf, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify };
+module.exports = { streakInfo, weekBounds, weekPoints, MAX_DEVICES, deviceOf, zagrebDay, todayIndex, todayOf, redis, valid, isObj, clean, merge, summary, rankOf, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify };

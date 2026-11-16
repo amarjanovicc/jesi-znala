@@ -2,6 +2,10 @@
 const crypto = require('crypto');
 const { redis, isObj, summary, deviceOf, todayOf, todayIndex, zagrebDay, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify } = require('./_lib');
 
+const L = require('./_league');
+const P = require('./_push');
+const push = require('./push');
+
 const MAX_LETTERS = 400;
 
 async function loadPlayers() {
@@ -43,7 +47,7 @@ module.exports = async (req, res) => {
       let storage = true;
       try { await redis(['PING']); } catch (e) { storage = false; }
       const { facts, source } = await getFacts();
-      return send(200, { storage, channels: channels(), start: config().start, base: baseFacts().length, count: facts.length, source });
+      return send(200, { storage, push: P.configured(), channels: channels(), start: config().start, base: baseFacts().length, count: facts.length, source });
     }
 
     if (action === 'letters') {
@@ -79,11 +83,12 @@ module.exports = async (req, res) => {
 
     if (action === 'players') {
       const { facts } = await getFacts(), titles = facts.map(f => f.title);
+      const subs = new Set(((await redis(['SCAN', '0', 'MATCH', 'jz:ps:*', 'COUNT', 500]))[1] || []).map(k => k.slice(6)));
       const list = (await loadPlayers()).map(p => {
         const s = summary(p.rec.state, titles);
         const last = s.letters.filter(l => l.msg).sort((a, b) => String(b.mt).localeCompare(String(a.mt)))[0];
         s.likeCats = {}; s.letters.filter(l => l.lk).forEach(l => { const c = facts[l.i] && facts[l.i].cat; if (c) s.likeCats[c] = (s.likeCats[c] || 0) + 1; });
-        s.today = todayOf(p.rec.state, titles); s.ua = p.rec.ua || '';
+        s.today = todayOf(p.rec.state, titles); s.ua = p.rec.ua || ''; s.push = subs.has(p.code);
         const gf = (s.fb || []).slice(-1)[0];
         s.lastMsg = last ? { i: last.i, title: last.title, msg: last.msg, mt: last.mt } : null;
         if (gf && (!last || gf.d > String(last.mt))) s.lastMsg = { i: -1, title: 'Općenito', msg: gf.t, mt: gf.d };
@@ -99,7 +104,7 @@ module.exports = async (req, res) => {
       const { facts } = await getFacts();
       const titles = facts.map(f => f.title), sm = summary(p.rec.state, titles);
       sm.letters.forEach(l => { l.cat = facts[l.i] ? facts[l.i].cat : ''; });
-      return send(200, Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null, ua: p.rec.ua || '', today: todayOf(p.rec.state, titles) }, sm));
+      return send(200, Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null, ua: p.rec.ua || '', today: todayOf(p.rec.state, titles), push: !!(await redis(['GET', 'jz:ps:' + p.code])) }, sm));
     }
 
     if (action === 'createPlayer') {
@@ -126,7 +131,8 @@ module.exports = async (req, res) => {
       const p = (await loadPlayers()).find(x => x.id === body.id);
       if (!p) return send(404, { error: 'missing' });
       await redis(['DEL', 'jz:p:' + p.code]);
-      await redis(['DEL', 'jz:seen:' + p.code]);
+      await redis(['DEL', 'jz:seen:' + p.code]); await redis(['DEL', 'jz:ps:' + p.code]);
+      await L.dropFromLeagues(p.code);
       if (p.rec.watch) await redis(['DEL', 'jz:w:' + p.rec.watch]);
       if ((await redis(['DECR', 'jz:count'])) < 0) await redis(['SET', 'jz:count', 0]);
       return send(200, { ok: true });
@@ -142,6 +148,33 @@ module.exports = async (req, res) => {
       p.rec.rv = (p.rec.rv | 0) + 1; p.rec.rst = [i]; p.rec.rstDay = day;
       await redis(['SET', 'jz:p:' + p.code, JSON.stringify(p.rec)]);
       return send(200, { ok: true });
+    }
+
+    if (action === 'leagues') {   // sve lige: ime, kod, članovi s bodovima ovog tjedna
+      const out = []; let cursor = '0';
+      for (let i = 0; i < 10; i++) { const r = await redis(['SCAN', cursor, 'MATCH', 'jz:lg:*', 'COUNT', 100]); cursor = String(r[0]); for (const k of r[1]) { const l = await L.load(k.slice(6)); if (l) out.push(Object.assign(await L.board(l, ''), { created: l.created })); } if (cursor === '0') break; }
+      return send(200, { leagues: out });
+    }
+
+    if (action === 'deleteLeague') {
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const id = String(body.id || '');
+      if (!L.inviteOk(id)) return send(400, { error: 'bad' });
+      const l = await L.load(id);
+      if (!l) return send(404, { error: 'missing' });
+      for (const m of l.members) await L.saveMine(m.code, (await L.mine(m.code)).filter(x => x !== id));
+      await redis(['DEL', 'jz:lg:' + id]);
+      if ((await redis(['DECR', 'jz:lgcount'])) < 0) await redis(['SET', 'jz:lgcount', 0]);
+      return send(200, { ok: true });
+    }
+
+    if (action === 'testPush') {   // pošalje podsjetnik odmah jednom uređaju, da admin provjeri da stvarno stiže
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      if (!P.configured()) return send(400, { error: 'notconfigured', message: 'Podsjetnici nisu postavljeni (VAPID ključevi u Vercelu).' });
+      const p = (await loadPlayers()).find(x => x.id === body.id);
+      if (!p) return send(404, { error: 'missing' });
+      const r = await push.remind(p.code, true);
+      return send(200, { result: r });
     }
 
     if (action === 'export') {   // sigurnosna kopija: pisma i napredak igrača (bez tajnih kodova za sinkronizaciju)

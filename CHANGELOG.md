@@ -2,6 +2,20 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.4.0] - 2026-11-16
+
+### Igra
+- **Liga:** privatne sobe za do 8 ljudi s pozivnim kodom ili linkom, tjedna ljestvica (pon do ned), pobjednik prošlog tjedna, nadimak bez računa.
+- **Serija:** najdulja serija u putovnici, serija se vidi i na ljestvici lige.
+- **Podsjetnik:** push obavijest oko 18 sati ako toga dana još nije otvorila pismo (uključuje se u „Tvoj ukus"); tekst spominje seriju u opasnosti.
+
+### Admin
+- Lige u Pregledu (kod, članovi, bodovi tjedna, brisanje), stanje podsjetnika u Obavijestima, gumb za probni podsjetnik u detaljima igrača.
+
+### Razvoj
+- `npm test`: testovi API-ja (liga, serija, push, admin); CI ih pokreće. `scripts/vapid.js` pravi VAPID ključeve.
+- Dijagnostički overlay više se ne pokazuje dok se ekran animira.
+
 ## [1.3.2] - 2026-11-16
 
 ### Ispravak

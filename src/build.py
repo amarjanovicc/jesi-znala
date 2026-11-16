@@ -41,6 +41,8 @@ DIAG = r'''<script>
       'prozor: ' + innerWidth + 'x' + innerHeight + ' scrollY=' + scrollY + ' docH=' + document.documentElement.scrollHeight,
       'reduce: ' + matchMedia('(prefers-reduced-motion: reduce)').matches + ' dark: ' + matchMedia('(prefers-color-scheme: dark)').matches, 'ua: ' + navigator.userAgent];
     var ok = f && r.height > 0 && +cs.opacity > 0.5 && cs.visibility !== 'hidden';
+    // ekran koji se upravo animira nije greška: provjeri ponovno, a pokaži dijagnostiku samo ako je i tada neispravan
+    if (!ok && !report.again && document.getAnimations && document.getAnimations().length) { report.again = 1; return setTimeout(report, 1800); }
     var old = document.getElementById('dbg'); if (old) old.remove();
     if (/[?&]debug/.test(location.search) || !ok) {
       var d = document.createElement('pre'); d.id = 'dbg'; d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;margin:0;padding:10px;background:#111;color:#9f9;font:11px/1.4 monospace;white-space:pre-wrap;word-break:break-all';
@@ -97,6 +99,13 @@ sw = """const C = 'jesi-znala-%s';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== C).map(x => caches.delete(x))))); self.clients.claim(); });
+// podsjetnik: push bez sadržaja, tekst se dohvaća sa servera (kolačić jz_id prepozna uređaj)
+self.addEventListener('push', e => e.waitUntil((async () => {
+  let m = { title: 'Jesi znala?', body: 'Danas te čeka novo pismo.' };
+  try { const r = await fetch('/api/push?msg=1', { credentials: 'include' }); if (r.ok) m = await r.json(); } catch (x) {}
+  await self.registration.showNotification(m.title, { body: m.body, icon: 'icon-192.png', badge: 'icon-192.png', tag: 'jz-podsjetnik', renotify: false });
+})()));
+self.addEventListener('notificationclick', e => { e.notification.close(); e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(l => l.length ? l[0].focus() : clients.openWindow('./'))); });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const u = new URL(e.request.url);

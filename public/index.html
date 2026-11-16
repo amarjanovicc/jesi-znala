@@ -22,6 +22,8 @@
       'prozor: ' + innerWidth + 'x' + innerHeight + ' scrollY=' + scrollY + ' docH=' + document.documentElement.scrollHeight,
       'reduce: ' + matchMedia('(prefers-reduced-motion: reduce)').matches + ' dark: ' + matchMedia('(prefers-color-scheme: dark)').matches, 'ua: ' + navigator.userAgent];
     var ok = f && r.height > 0 && +cs.opacity > 0.5 && cs.visibility !== 'hidden';
+    // ekran koji se upravo animira nije greška: provjeri ponovno, a pokaži dijagnostiku samo ako je i tada neispravan
+    if (!ok && !report.again && document.getAnimations && document.getAnimations().length) { report.again = 1; return setTimeout(report, 1800); }
     var old = document.getElementById('dbg'); if (old) old.remove();
     if (/[?&]debug/.test(location.search) || !ok) {
       var d = document.createElement('pre'); d.id = 'dbg'; d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;margin:0;padding:10px;background:#111;color:#9f9;font:11px/1.4 monospace;white-space:pre-wrap;word-break:break-all';
@@ -275,6 +277,15 @@ button.cell:active { transform: scale(.95) }
 .msg { font-size: 14px; line-height: 1.4; color: var(--red) }
 .stack { display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px }
 .stack .btn { width: 100% }
+.board { list-style: none; display: flex; flex-direction: column; margin: 0; padding: 0 }
+.board li { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 11px 0; border-top: 1px dashed var(--rule) }
+.board li:first-child { border-top: 0 }
+.board li.me { background: rgba(39,67,160,.08); margin: 0 -8px; padding-inline: 8px; border-radius: 2px }
+.board .pos { font: 700 24px/1 var(--hand); color: var(--pen) } .board li:first-child .pos { color: var(--red) }
+.board .nm { font-weight: 700; overflow-wrap: anywhere; line-height: 1.3 }
+.board small { display: block; font: 400 12.5px/1.35 var(--type); color: var(--soft) }
+.board .pts { font: 700 24px/1 var(--type); font-variant-numeric: tabular-nums; text-align: right } .board .pts small { font-size: 11px }
+.champ { font: 700 22px/1.2 var(--hand); color: var(--red) }
 .kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; padding: 4px 0 12px }
 .kv b { display: block; font: 700 34px/1 var(--cond); font-variant-numeric: tabular-nums } .kv span { font-size: 12px; color: var(--soft) }
 .end { text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; padding-top: 30px }
@@ -390,7 +401,7 @@ function rankInfo(p) {
 /* ============ STANJE (samo u ovom pregledniku) ============ */
 const KEY = 'jesi-znala-v2';
 const FXK = 'jesi-znala-fx';
-const BUILD = '16.11. 18:03';
+const BUILD = '16.11. 18:12';
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 let FX = true; try { FX = localStorage.getItem(FXK) !== '0'; } catch (e) {}   // zadano uključeno, i uz smanjeno kretanje na uređaju
 document.documentElement.classList.toggle('fx', FX);
@@ -418,6 +429,11 @@ function streak() {
   if (!S.days[ymd(d)]) d.setDate(d.getDate() - 1);
   while (S.days[ymd(d)]) { n++; d.setDate(d.getDate() - 1); }
   return n;
+}
+function bestStreak() {
+  let best = 0, run = 0, prev = null;
+  for (const k of Object.keys(S.days).sort()) { const d = new Date(k + 'T12:00:00'); run = prev && Math.round((d - prev) / DAY) === 1 ? run + 1 : 1; prev = d; if (run > best) best = run; }
+  return best;
 }
 const played = i => S.f[i];
 const nextUnplayed = () => { const u = unlocked(); if (!played(u - 1)) return u - 1; for (let i = 0; i < u; i++) if (!played(i)) return i; return null; };
@@ -514,11 +530,12 @@ const VIEWS = {
       '<div><div class="pass-t">Putovnica</div><div class="pass-s">Jesi znala?</div></div><div class="pass-n">Čin<br>' + (rk.i + 1) + ' / ' + RANKS.length + '</div></div>' +
       '<div class="pass-page"><div class="pass-grid"><div><small>Čin</small><span class="rk-name">' + rk.name + '</span></div><div><small>' + plural(rk.p, 'Bod', 'Boda', 'Bodova') + '</small><span class="rk-pts">' + rk.p + '</span></div></div>' +
       '<div class="rk-bar" role="progressbar" aria-label="Napredak do sljedećeg čina" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + rk.pct + '"' + (rk.next ? ' aria-valuetext="Još ' + left + ' ' + plural(left, 'bod', 'boda', 'bodova') + ' do čina ' + rk.next.name + '"' : '') + '><i style="width:' + rk.pct + '%"></i></div>' +
-      '<p class="rk-next">' + (rk.next ? 'Još ' + left + ' ' + plural(left, 'bod', 'boda', 'bodova') + ' do čina „' + rk.next.name + '”. ' : 'Najviši čin. ') + 'Pismo vrijedi 2 boda, čisti žig +1, zapamćeno +2.</p>' +
+      '<p class="rk-next">' + (rk.next ? 'Još ' + left + ' ' + plural(left, 'bod', 'boda', 'bodova') + ' do čina „' + rk.next.name + '”. ' : 'Najviši čin. ') + 'Pismo vrijedi 2 boda, čisti žig +1, zapamćeno +2.' + (bestStreak() > 1 ? ' Najdulja serija: ' + bestStreak() + ' ' + plural(bestStreak(), 'dan', 'dana', 'dana') + '.' : '') + '</p>' +
       '<ul class="visas">' + SEALS.map((x, k) => '<li' + (have.includes(x.id) ? ' class="on" style="--vc:' + VC[k % 3] + ';--va:' + VA[k % 3] + 'deg"' : '') + '><span class="vz" aria-hidden="true">' + x.g + '</span>' + x.t + '<span class="sr-only">' + (have.includes(x.id) ? ', osvojeno' : ', još nije osvojeno') + '</span></li>').join('') + '</ul>' +
       '<div class="mrz" aria-hidden="true"><span>' + fill36('P<JZN<<' + mrz(rk.name)) + '</span><span>' + fill36(String(rk.p).padStart(5, '0') + '<BODOVA<' + String(c.n).padStart(3, '0') + '<PISAMA') + '</span></div></div></section>';
     { const ic = S.int ? Object.keys(S.int.c || {}).filter(k => S.int.c[k]).length : 0, lc = Object.values(S.f).filter(x => x.lk).length;
       h += '<button class="slip" data-act="interests"><span><b>Tvoj ukus</b>' + (ic || lc ? (ic ? ic + ' ' + plural(ic, 'područje', 'područja', 'područja') + ' interesa' : '') + (ic && lc ? ', ' : '') + (lc ? lc + ' ♥' : '') : 'Označi što te zanima, predloži temu ili mi javi bilo što.') + '</span><u>Otvori ›</u></button>'; }
+    if (API && SY.code) h += lgSlip();
     h += '<section class="book"><div class="book-h"><h2>Album</h2><span>' + c.n + ' / ' + FACTS.length + '</span></div><div class="grid">';
     FACTS.forEach((f, i) => {
       const st = S.f[i];
@@ -579,8 +596,31 @@ const VIEWS = {
       '<div class="cats">' + Object.keys(CATS).map(c => '<button type="button" class="catbtn ' + c + '" data-act="cat" data-c="' + c + '" aria-pressed="' + !!(it.c || {})[c] + '">' + CATS[c] + '</button>').join('') + '</div>' +
       '<div class="stack" style="padding-top:16px"><label class="lbl" for="ideaIn">Predloži temu</label><input id="ideaIn" class="code-in" maxlength="60" enterkeyhint="done" autocomplete="off" placeholder="npr. Egipat, svemir, tajne službe"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '><button class="btn alt" data-act="idea"' + (ideas.length >= IDEA_MAX ? ' disabled' : '') + '>Dodaj temu</button><p class="msg" id="ideast" role="status" style="color:var(--soft)">' + (ideas.length >= IDEA_MAX ? 'Popis je pun (' + IDEA_MAX + '). Ukloni jednu temu za novu.' : '') + '</p>' +
       (ideas.length ? '<ul class="ideas">' + ideas.map((t, i) => '<li><span>' + esc(t) + '</span><button type="button" data-act="rmidea" data-i="' + i + '" aria-label="Ukloni temu">×</button></li>').join('') + '</ul>' : '') +
-      '<label class="lbl" for="fbIn" style="margin-top:10px">Javi mi bilo što, bilo kad</label><textarea id="fbIn" class="fb-in" maxlength="280" rows="3" placeholder="Što ti se sviđa, što bi promijenila, što te zanima…"></textarea>' +
+      pushHtml() + '<label class="lbl" for="fbIn" style="margin-top:10px">Javi mi bilo što, bilo kad</label><textarea id="fbIn" class="fb-in" maxlength="280" rows="3" placeholder="Što ti se sviđa, što bi promijenila, što te zanima…"></textarea>' +
       '<button class="btn alt" data-act="sendfb">Pošalji poruku</button><p class="msg" id="fbst" role="status" style="color:var(--green)">' + ((S.fb || []).length ? 'Zadnja poslana: „' + esc(S.fb[S.fb.length - 1].t) + '”' : '') + '</p></div></section>';
+  },
+
+  league() {
+    const back = '<button class="back" data-act="home">‹ natrag</button>', dm = d => d.slice(8) + '.' + d.slice(5, 7) + '.';
+    if (!SY.code) return back + '<p class="say">Liga traži sinkronizaciju. Uključi je na dnu početnog ekrana.</p>';
+    if (LG.list === null) return back + '<section class="card"><div class="card-h"><span>Liga</span><span></span></div><p class="say" style="padding-bottom:12px">' + (LG.err ? esc(LG.err) : 'Učitavam…') + '</p></section>';
+    const nick = esc(nickGet());
+    let h = back;
+    LG.list.forEach(l => {
+      const ask = V.lgAsk === l.id, text = encodeURIComponent(lgText(l));
+      h += '<section class="card"><div class="card-h"><span>' + esc(l.name) + '</span><span>' + l.members + ' / ' + l.max + '</span></div>' +
+        '<p class="say">Tjedan ' + dm(l.week.from) + ' – ' + dm(l.week.to) + ' Pismo 2 boda, čisti žig +1, nedjeljna razglednica +1 po točnom.</p>' +
+        (l.champion ? '<p class="champ">Prošli tjedan: ' + esc(l.champion.nick) + ' (' + l.champion.pts + ' ' + plural(l.champion.pts, 'bod', 'boda', 'bodova') + ')</p>' : '') +
+        '<ol class="board">' + l.board.map((r, k) => '<li' + (r.me ? ' class="me"' : '') + '><span class="pos">' + (k + 1) + '.</span><span class="nm">' + esc(r.nick) + (r.me ? ' (ti)' : '') + '<small>' + r.n + ' ' + plural(r.n, 'pismo', 'pisma', 'pisama') + ' ovaj tjedan' + (r.streak > 1 ? ' · serija ' + r.streak : '') + (r.today ? ' · danas ✓' : '') + '</small></span><span class="pts">' + r.wk + '<small>' + plural(r.wk, 'bod', 'boda', 'bodova') + '</small></span></li>').join('') + '</ol>' +
+        '<div class="stack" style="padding-top:12px"><span class="lbl">Kod lige: ' + l.id + '</span><div class="share-row"><a class="btn alt" target="_blank" rel="noopener" href="' + WA + text + '">Pozovi na WhatsAppu</a><button class="btn alt" data-act="lgcopy" data-id="' + l.id + '">Kopiraj poziv</button></div>' +
+        (ask ? '<p class="msg">Izlaziš iz lige „' + esc(l.name) + '”? Tvoji bodovi ostaju samo tebi.</p><button class="btn" data-act="lgleave" data-id="' + l.id + '">Da, izađi</button><button class="btn alt" data-act="lgno">Odustani</button>' : '<button class="back" data-act="lgask" data-id="' + l.id + '">Izađi iz lige</button>') + '</div></section>';
+    });
+    if (LG.list.length < 3) h += '<section class="card"><div class="card-h"><span>' + (LG.list.length ? 'Još jedna liga' : 'Natjecanje s drugima') + '</span><span></span></div>' +
+      '<p class="say">Privatna liga za do 8 ljudi: bez računa, vidi se samo nadimak, bodovi i serija. Ljestvica se nulira svaki ponedjeljak.</p><div class="stack">' +
+      '<label class="lbl" for="lgNick">Tvoj nadimak u ligi</label><input id="lgNick" class="code-in" maxlength="16" autocomplete="off" enterkeyhint="next" value="' + nick + '" placeholder="npr. Ana">' +
+      '<label class="lbl" for="lgCode">Imaš kod lige?</label><input id="lgCode" class="code-in" maxlength="6" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" value="' + esc(V.invite || '') + '" placeholder="6 znakova"><button class="btn" data-act="lgjoin">Pridruži se</button>' +
+      '<label class="lbl" for="lgName" style="margin-top:6px">Ili napravi novu</label><input id="lgName" class="code-in" maxlength="24" autocomplete="off" enterkeyhint="done" placeholder="ime lige"><button class="btn alt" data-act="lgcreate">Napravi ligu</button></div></section>';
+    return h + '<p class="msg" id="lgmsg" role="status" style="color:var(--soft)">' + (LG.err ? esc(LG.err) : '') + '</p>';
   },
 
   sync() {
@@ -755,11 +795,13 @@ function initSync() {
     if (m[1] === 'watch') { go('watch', { data: null, err: false }, false); loadWatch(m[2]); }
     else { SY = { code: m[2], watch: null, last: null, err: null, rv: 0 }; saveSY(); }
   }
+  const lm = /^#liga=([A-Za-z0-9]{6})$/.exec(location.hash);
+  if (lm) { history.replaceState(null, '', location.pathname + location.search); V.invite = lm[1].toUpperCase(); }
   if (!SY.code) { const ck = getCk(); if (ck) { SY = { code: ck, watch: null, last: null, err: null, rv: 0 }; saveSY(); } else enrol(); }   // vrati ID iz kolačića ili ga napravi
   fetch('/api/facts').then(r => r.json()).then(j => {
     if (Array.isArray(j) && j.length >= FACTS.length && j.every(x => x && x.title && x.story && x.cat && Array.isArray(x.quiz) && x.quiz.length === 2)) { const nf = j.map(deepEsc); if (JSON.stringify(nf) !== JSON.stringify(FACTS)) { FACTS = nf; if (V.name === 'home') paint(false); } }
   }).catch(() => {});
-  if (SY.code) pushNow();
+  if (SY.code) pushNow().then(() => { lgRefresh().then(() => { if (V.invite && V.name === 'home') { go('league', { invite: V.invite }); } }); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && SY.code) pushNow(); });
 }
 const SYMSG = { nostore: 'Server još nema bazu podataka. Uključi je u Vercelu (Storage), pa probaj opet.', fail: 'Server trenutno nije dostupan. Probaj malo kasnije.', badcode: 'Taj kod ne postoji. Provjeri je li točno prepisan.' };
@@ -873,6 +915,72 @@ function tick() {
   el.textContent = pad(Math.floor(t / 3600000)) + ':' + pad(Math.floor(t / 60000) % 60) + ':' + pad(Math.floor(t / 1000) % 60);
 }
 
+/* Lige: privatne sobe s kodom. Sve računa server, igra samo prikazuje. */
+let LG = { list: null, err: null, key: '', busy: false };
+const nickGet = () => { try { return localStorage.getItem('jz-nick') || ''; } catch (e) { return ''; } };
+const lgText = l => 'Pridruži se mojoj ligi „' + l.name + '” u igri Jesi znala? Kod: ' + l.id + '\n' + location.origin + '/#liga=' + l.id;
+function lgSlip() {
+  const l = LG.list && LG.list[0], k = l ? l.board.findIndex(r => r.me) : -1;
+  const t = k >= 0 ? '„' + esc(l.name) + '”: ti si ' + (k + 1) + '. od ' + l.board.length + ', ' + l.board[k].wk + ' ' + plural(l.board[k].wk, 'bod', 'boda', 'bodova') + ' ovaj tjedan.' : 'Tjedna ljestvica s prijateljima, bez računa. Napravi ligu ili se pridruži kodom.';
+  return '<button class="slip week" data-act="league"><span><b>Liga</b>' + t + '</span><u>Otvori ›</u></button>';
+}
+async function lgRefresh() {
+  if (!API || !SY.code || LG.busy) return;
+  LG.busy = true;
+  try {
+    const r = await api('POST', '/api/league', { action: 'mine', code: SY.code });
+    if (r.ok && r.j) { const key = JSON.stringify(r.j.leagues); const ch = key !== LG.key || LG.list === null || LG.err; LG.list = r.j.leagues; LG.key = key; LG.err = null; if (ch && (V.name === 'home' || V.name === 'league')) paint(false); }
+    else { LG.err = (r.j && r.j.message) || 'Liga trenutno nije dostupna.'; if (V.name === 'league') paint(false); }
+  } catch (e) { LG.err = 'Nema veze. Probaj malo kasnije.'; if (V.name === 'league') paint(false); }
+  LG.busy = false;
+}
+async function lgDo(action, extra) {
+  const out = $('lgmsg'); if (out) out.textContent = 'Trenutak…';
+  try {
+    const r = await api('POST', '/api/league', Object.assign({ action, code: SY.code }, extra));
+    if (r.ok && r.j) { LG.list = r.j.leagues; LG.key = JSON.stringify(r.j.leagues); LG.err = null; V.lgAsk = null; V.invite = ''; if (V.name === 'league') { paint(false); ['lgCode', 'lgName'].forEach(i => { if ($(i)) $(i).value = ''; }); } return true; }
+    const m = (r.j && r.j.message) || 'Nije uspjelo. Probaj kasnije.'; if ($('lgmsg')) $('lgmsg').textContent = m; return false;
+  } catch (e) { if ($('lgmsg')) $('lgmsg').textContent = 'Nema veze. Probaj kasnije.'; return false; }
+}
+function lgNick() { const n = ($('lgNick').value || '').trim(); try { localStorage.setItem('jz-nick', n); } catch (e) {} return n; }
+
+/* Podsjetnik (web push): navečer, samo ako taj dan još nije otvorila pismo. Na iPhoneu radi tek kad je igra dodana na početni zaslon. */
+let PUSH = { state: null, key: null };   // state: unsupported | ios | off | on | denied | notconfigured
+const isStandalone = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+async function pushInit() {
+  if (!API || PUSH.state) return;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (!('serviceWorker' in navigator) || !('Notification' in window) || (!('PushManager' in window) && !(ios && !isStandalone()))) { PUSH.state = 'unsupported'; return; }
+  if (ios && !isStandalone()) { PUSH.state = 'ios'; if (V.name === 'interests') paint(false); return; }
+  try {
+    const r = await api('GET', '/api/push?key=1'); if (!r.ok || !r.j || !r.j.key) { PUSH.state = 'notconfigured'; return; }
+    PUSH.key = r.j.key;
+    const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+    PUSH.state = Notification.permission === 'denied' ? 'denied' : sub && Notification.permission === 'granted' ? 'on' : 'off';
+  } catch (e) { PUSH.state = 'unsupported'; }
+  if (V.name === 'interests') paint(false);
+}
+function pushHtml() {
+  const st = PUSH.state; if (!st || st === 'unsupported' || st === 'notconfigured') return '';
+  const say = { ios: 'Podsjetnik na iPhoneu radi kad igru dodaš na početni zaslon: Dijeli, pa „Dodaj na početni zaslon", i otvori je odande.', off: 'Svaku večer oko 18 sati javim ti ako toga dana još nisi otvorila pismo, i čuvam ti seriju.', on: 'Podsjetnik je uključen: večer prije kraja dana javit ću ti ako pismo još čeka.', denied: 'Obavijesti su isključene u postavkama preglednika. Uključi ih za ovu stranicu pa se vrati.' }[st];
+  return '<span class="lbl" style="margin-top:10px">Podsjetnik</span><p class="say">' + say + '</p>' + (st === 'off' ? '<button class="btn alt" data-act="pushon">Uključi podsjetnik</button>' : st === 'on' ? '<button class="btn alt" data-act="pushoff">Isključi podsjetnik</button>' : '') + '<p class="msg" id="pushst" role="status" style="color:var(--soft)"></p>';
+}
+async function pushOn() {
+  const out = $('pushst'), say = t => { const o = $('pushst'); if (o) o.textContent = t; };
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { PUSH.state = perm === 'denied' ? 'denied' : 'off'; return paint(false); }
+    const k = PUSH.key.replace(/-/g, '+').replace(/_/g, '/'), arr = Uint8Array.from(atob(k + '='.repeat((4 - k.length % 4) % 4)), c => c.charCodeAt(0));
+    const reg = await navigator.serviceWorker.ready, sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: arr });
+    const r = await api('POST', '/api/push', { code: SY.code, sub: sub.toJSON() });
+    if (!r.ok) throw new Error('save');
+    PUSH.state = 'on'; paint(false); say('Uključeno.'); announce('Podsjetnik uključen');
+  } catch (e) { say('Nije uspjelo uključiti podsjetnik. Probaj kasnije.'); }
+}
+async function pushOff() {
+  try { const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription(); if (sub) await sub.unsubscribe(); await api('POST', '/api/push', { code: SY.code, off: true }); PUSH.state = 'off'; paint(false); } catch (e) { const o = $('pushst'); if (o) o.textContent = 'Nije uspjelo. Probaj kasnije.'; }
+}
+
 $('view').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
   const a = b.dataset.act, bottom = () => window.scrollTo(0, document.body.scrollHeight);
@@ -892,7 +1000,16 @@ $('view').addEventListener('click', e => {
   else if (a === 'snd') { S.snd = !sndOn(); save(); SND.key(); go('home', {}, false); bottom(); }
   else if (a === 're') { const st = S.f[V.i]; if (st) { st.re = b.dataset.v; save(); SND.key(); b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === st.re))); } }
   else if (a === 'like') { const st = S.f[V.i]; if (st) { st.lk = st.lk ? 0 : 1; st.lt = new Date().toISOString(); save(); SND.key(); b.setAttribute('aria-pressed', String(!!st.lk)); b.innerHTML = likeHtml(st).replace(/^<button[^>]*>|<\/button>$/g, ''); } }
-  else if (a === 'interests') go('interests');
+  else if (a === 'interests') { go('interests'); pushInit(); }
+  else if (a === 'league') { go('league', { invite: V.invite }); lgRefresh(); }
+  else if (a === 'lgcreate') { const n = lgNick(); lgDo('create', { nick: n, name: ($('lgName').value || '').trim() }); }
+  else if (a === 'lgjoin') { const n = lgNick(); lgDo('join', { nick: n, invite: ($('lgCode').value || '').trim() }); }
+  else if (a === 'lgask') { V.lgAsk = b.dataset.id; paint(false); const y = document.querySelector('[data-act=lgleave]'); if (y) y.focus({ preventScroll: true }); }
+  else if (a === 'lgno') { V.lgAsk = null; paint(false); }
+  else if (a === 'lgleave') lgDo('leave', { invite: b.dataset.id });
+  else if (a === 'lgcopy') { const l = (LG.list || []).find(x => x.id === b.dataset.id); if (l) copy(b, lgText(l)); }
+  else if (a === 'pushon') pushOn();
+  else if (a === 'pushoff') pushOff();
   else if (a === 'cat') { S.int = S.int || { c: {}, ideas: [] }; const c = b.dataset.c, on = S.int.c[c] = S.int.c[c] ? 0 : 1; S.int.cu = new Date().toISOString(); save(); SND.key();
     b.setAttribute('aria-pressed', String(!!on)); const n = $('intn'); if (n) n.textContent = Object.values(S.int.c).filter(Boolean).length + ' / ' + Object.keys(CATS).length; }
   else if (a === 'idea') addIdea();
@@ -933,7 +1050,7 @@ function addIdea() {
   S.int.ideas.push(t); S.int.cu = new Date().toISOString(); save(); SND.key(); el.value = ''; repaintKeepDraft(true);
   const o = $('ideast'); if (o && !o.textContent) o.textContent = 'Dodano: „' + t + '”';
 }
-$('view').addEventListener('keydown', e => { if (e.key !== 'Enter') return; if (e.target.id === 'ideaIn') { e.preventDefault(); addIdea(); } else if (e.target.id === 'codeIn') { e.preventDefault(); syncJoin(); } });
+$('view').addEventListener('keydown', e => { if (e.key !== 'Enter') return; if (e.target.id === 'ideaIn') { e.preventDefault(); addIdea(); } else if (e.target.id === 'codeIn') { e.preventDefault(); syncJoin(); } else if (e.target.id === 'lgCode') { e.preventDefault(); const b = document.querySelector('[data-act=lgjoin]'); if (b) b.click(); } else if (e.target.id === 'lgName') { e.preventDefault(); const b = document.querySelector('[data-act=lgcreate]'); if (b) b.click(); } });
 $('view').addEventListener('input', e => { if (e.target.id !== 'rng') return; $('numv').textContent = e.target.value + FACTS[V.i].num.unit; e.target.setAttribute('aria-valuetext', $('numv').textContent);
   const m = $('main'); if (m && m.disabled && !V.answered) { m.disabled = false; m.textContent = 'Potvrdi'; } });   // potvrda tek kad stvarno procijeni
 document.addEventListener('keydown', e => {

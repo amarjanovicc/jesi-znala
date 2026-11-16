@@ -17,6 +17,9 @@ jobs:
       - name: Sintaksa funkcija (api/)
         run: for f in api/*.js; do node --check "$f"; done
 
+      - name: Testovi API-ja
+        run: node tests/api.test.js
+
       - name: Sintaksa skripti u stranicama
         run: |
           node -e "

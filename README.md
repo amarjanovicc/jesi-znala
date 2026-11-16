@@ -39,6 +39,9 @@ Dnevna igra znanja u obliku pisma: svaki dan stigne jedno **pismo s kratkom pri�
 | **Nedjeljna razglednica** | Nedjeljom pet pitanja iz cijelog albuma. |
 | **Reakcije i poruke** | Nakon pisma može se dati reakcija i napisati kratka poruka koja stiže adminu. |
 | **Ukus** | Srce „sviđa mi se" na pismima, označena područja interesa i prijedlozi tema; admin vidi što voli i dobiva obavijest. |
+| **Serija** | Dani zaredom s barem jednim odigranim pismom; prikazuje se na početnom ekranu, u putovnici (najdulja serija) i na ljestvici lige. Živa je ako je zadnji dan danas ili jučer. |
+| **Liga** | Privatna soba za do 8 ljudi s pozivnim kodom (6 znakova) ili linkom `/#liga=KOD`. Bez računa: vidi se samo nadimak, bodovi tjedna, serija i čin. Tjedan teče od ponedjeljka do nedjelje (pismo 2 boda, čisti žig +1, razglednica +1 po točnom), a ljestvica pokazuje i pobjednika prošlog tjedna. Do 3 lige po igraču, do 30 liga ukupno. |
+| **Podsjetnik** | Web push jednom dnevno oko 18 sati, samo ako je uključen i toga dana još nije otvoreno pismo; tekst spominje seriju u opasnosti. Na iPhoneu radi tek kad je igra dodana na početni zaslon. |
 | **Uređaji i sinkronizacija** | Svaki mobitel dobije anonimni ID bez prijave. Napredak se čuva na serveru i vraća ako preglednik obriše podatke; uređaje se može spojiti kodom u linku. |
 | **Offline** | Aplikacija se može dodati na početni zaslon i radi bez interneta (service worker). |
 
@@ -51,7 +54,8 @@ Na `/admin.html`, uz lozinku:
 - **Pregled:** stanje, popis „za napraviti", zadnja aktivnost i poruke igrača.
 - **Pisma:** tablica s pretragom i filtrom, uređivač s pregledom uživo, sigurnosna kopija i povratak na prethodnu verziju.
 - **Igrači:** stvaranje linka za novog igrača, link za praćenje samo za pregled, čin i bodovi, reakcije i poruke.
-- **Obavijesti:** stanje kanala i probna poruka.
+- **Obavijesti:** stanje kanala, stanje podsjetnika igraču i probna poruka.
+- **Pregled** prikazuje i sve lige (kod, članovi, bodovi tjedna) uz brisanje lige; u detaljima igrača je gumb za probni podsjetnik.
 - **Izvoz:** sva pisma i napredak igrača kao JSON (bez tajnih kodova).
 
 Obavijest stiže kad povezani igrač **uđe u igru** (najviše jednom u 30 minuta), **odigra pismo ili nedjeljnu razglednicu**, **napiše poruku ili reakciju** ili **dobije novi čin**. Podržani su kanali [ntfy](https://ntfy.sh), Telegram i e-pošta (Resend); dovoljan je jedan.
@@ -185,7 +189,9 @@ Bodovi: **pismo 2**, **čisti žig (3/3) +1**, **zapamćeno pismo +2**. Popis č
 | `/api/progress?code=…` | GET | kod | Provjera postoji li kod. |
 | `/api/progress?watch=…` | GET | kod za praćenje | Sažetak napretka samo za čitanje. |
 | `/api/admin?action=login` | POST | lozinka | Vraća token koji vrijedi 12 sati. |
-| `/api/admin?action=…` | GET/POST | token | `status`, `letters`, `saveLetters`, `restoreLetters`, `players`, `player`, `createPlayer`, `labelPlayer`, `deletePlayer`, `testNotify`, `export`. |
+| `/api/admin?action=…` | GET/POST | token | `status`, `letters`, `saveLetters`, `restoreLetters`, `players`, `player`, `createPlayer`, `labelPlayer`, `deletePlayer`, `resetToday`, `leagues`, `deleteLeague`, `testPush`, `testNotify`, `export`. |
+| `/api/league` | POST | kod uređaja, zaglavlje `X-JZ`, ista adresa | `mine`, `create`, `join`, `leave`; vraća ljestvice liga tog uređaja. |
+| `/api/push` | GET/POST | ovisno | `?key=1` javni VAPID ključ, `POST` sprema ili briše pretplatu uređaja, `?msg=1` tekst obavijesti (prepoznaje uređaj po kolačiću), `?cron=1` dnevni cron (radi samo navečer i najviše jednom dnevno po uređaju). |
 
 ## Sigurnost i privatnost
 
@@ -226,7 +232,8 @@ gh release create v1.1.0 --title "v1.1.0" --notes-file <(sed -n '/^## \[1.1.0\]/
 
 ## Poznata ograničenja
 
-- **Nema testova ponašanja.** CI provjerava samo sintaksu, valjanost pisama i konfiguraciju; ponašanje igre, admina i obavijesti provjereno je ručno i pomoćnim skriptama koje nisu dio projekta.
+- **Testovi pokrivaju samo API** (`npm test`: liga, serija, podsjetnik, admin, s lažnim Redisom i push servisom). Ponašanje zaslona i stvarna isporuka push obavijesti provjereni su ručno.
+- **Podsjetnik traži postavljanje:** ključevi se naprave naredbom `node scripts/vapid.js`, a `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` i `VAPID_SUBJECT` upisuju se u Vercel (nikad u Git). Cron je jednom dnevno (Vercel Hobby), pa vrijeme nije točno na minutu. Obavijest nema sadržaj u samoj poruci: servis worker tekst dohvaća sa servera.
 - **Pisma su javna:** `/api/facts` vraća sva pisma odjednom, uključujući ona koja se tek trebaju otključati. Datum otključavanja kontrolira samo front end.
 - **Bez računa znači ograničen oporavak:** napredak se vraća dok postoji kolačić ili link za sinkronizaciju; kad nestanu oba, uređaj je za sustav novi.
 - **Redni broj je ključ:** pisma se ne mogu brisati ni premještati bez gubitka napretka.
