@@ -19,7 +19,7 @@ const isObj = o => o && typeof o === 'object' && !Array.isArray(o);
 
 // Zadržava samo očekivani oblik stanja, da korisnik ne može spremiti proizvoljne podatke.
 function clean(st) {
-  const out = { f: {}, days: {}, week: {} };
+  const out = { f: {}, days: {}, week: {}, fb: [] };
   if (!isObj(st)) return out;
   if (isObj(st.f)) for (const k of Object.keys(st.f).slice(0, 500)) {
     const x = st.f[k];
@@ -38,6 +38,7 @@ function clean(st) {
     const w = st.week[k];
     if (/^\d{4}-\d{2}-\d{2}$/.test(k) && isObj(w)) out.week[k] = { r: w.r | 0, n: w.n | 0 };
   }
+  out.fb = cleanFb(st.fb);
   const it = st.int;                                                                       // interesi: područja i prijedlozi tema
   if (isObj(it) && typeof it.cu === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(it.cu)) {
     const c = {}; if (isObj(it.c)) for (const k of INTERESTS) if (it.c[k]) c[k] = 1;
@@ -47,10 +48,19 @@ function clean(st) {
   return out;
 }
 
+// opće poruke adminu, bilo kad (nisu vezane uz pismo)
+const ISO = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/;
+function cleanFb(list) {
+  if (!Array.isArray(list)) return [];
+  return list.filter(x => isObj(x) && typeof x.t === 'string' && typeof x.d === 'string' && ISO.test(x.d))
+    .map(x => ({ t: x.t.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 280), d: x.d })).filter(x => x.t).slice(-20);
+}
 const INTERESTS = ['pov', 'ant', 'geo', 'inf'];
 const rank = s => (s.rev || 0) * 100 + (s.box || 0);
 function merge(a, b) {
   const out = { f: {}, days: Object.assign({}, a.days, b.days), week: Object.assign({}, a.week, b.week) };
+  const seen = new Set(), fb = [...(a.fb || []), ...(b.fb || [])].filter(x => { const k = x.d + x.t; if (seen.has(k)) return false; seen.add(k); return true; });
+  out.fb = fb.sort((x, y) => x.d.localeCompare(y.d)).slice(-20);
   const ia = a.int, ib = b.int; if (ia || ib) out.int = !ia ? ib : !ib ? ia : (ib.cu >= ia.cu ? ib : ia);
   for (const k of new Set([...Object.keys(a.f), ...Object.keys(b.f)])) {
     const x = a.f[k], y = b.f[k];
@@ -88,7 +98,7 @@ function summary(st, titles) {
   return {
     n: letters.length, total: titles.length, perfect: letters.filter(l => l.score === 3).length, learned: letters.filter(l => l.learned).length,
     streak, last: days.length ? days[days.length - 1] : null, weeks: Object.keys(st.week).length, letters,
-    points: pointsOf(st), rank: rankOf(st).name, likes: letters.filter(l => l.lk).length, int: st.int || null,
+    points: pointsOf(st), rank: rankOf(st).name, likes: letters.filter(l => l.lk).length, int: st.int || null, fb: st.fb || [],
   };
 }
 

@@ -2,6 +2,14 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.3.0] - 2026-11-16
+
+### Igra
+- Poruka adminu bilo kad: na ekranu „Tvoj ukus" polje „Javi mi bilo što, bilo kad" (do 280 znakova, zadnjih 20 se čuva).
+
+### Admin
+- Opće poruke u detaljima igrača, a zadnja poruka (uključujući opće) i u Pregledu; obavijest kad stigne nova.
+
 ## [1.2.1] - 2026-11-16
 
 ### Igra

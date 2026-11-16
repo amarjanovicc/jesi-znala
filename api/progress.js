@@ -13,7 +13,7 @@ async function describe({ created, cur, merged, label, ua }) {
   const { facts } = await getFacts();
   const titles = facts.map(f => f.title);
   const who = label || 'Ona';
-  const before = cur ? cur.state : { f: {}, days: {}, week: {} };
+  const before = cur ? cur.state : { f: {}, days: {}, week: {}, fb: [] };
   const keys = Object.keys(merged.f).map(Number).sort((a, b) => a - b);
   const fresh = keys.filter(k => !before.f[k]);
   const weeks = Object.keys(merged.week).filter(k => !before.week[k]);
@@ -21,6 +21,7 @@ async function describe({ created, cur, merged, label, ua }) {
   const likes = keys.filter(k => merged.f[k].lk && !(before.f[k] || {}).lk);
   const bi = before.int || { c: {}, ideas: [] }, mi = merged.int, newIdeas = mi ? (mi.ideas || []).filter(t => !(bi.ideas || []).includes(t)) : [];
   const catsChanged = mi && Object.keys(mi.c).sort().join() !== Object.keys(bi.c || {}).sort().join();
+  const newFb = (merged.fb || []).filter(x => !(before.fb || []).some(y => y.d === x.d && y.t === x.t));
   const reacts = keys.filter(k => merged.f[k].re && merged.f[k].re !== (before.f[k] || {}).re);
   const sum = summary(merged, titles);
   const r0 = rankOf(before), r1 = rankOf(merged), up = r1.index > r0.index ? ' Novi čin: ' + r1.name + '!' : '';
@@ -31,13 +32,14 @@ async function describe({ created, cur, merged, label, ua }) {
   msgs.slice(0, 2).forEach(i => lines.push(who + ' o pismu ' + ref(i) + ': „' + merged.f[i].msg + '”'));
   if (fresh.length) lines.push(who + ': ' + fresh.slice(0, 3).map(i => ref(i) + ' ' + merged.f[i].r.filter(Boolean).length + '/3').join(', ') + (fresh.length > 3 ? ' i još ' + (fresh.length - 3) : '') + tail);
   reacts.filter(i => !msgs.includes(i)).slice(0, 2).forEach(i => lines.push(who + ' o pismu ' + ref(i) + ': ' + RE[merged.f[i].re]));
+  newFb.slice(-2).forEach(x => lines.push(who + ': „' + x.t + '”'));
   likes.slice(0, 2).forEach(i => lines.push(who + ': sviđa joj se pismo ' + ref(i) + ' ♥'));
   if (catsChanged) lines.push(who + ' zanima: ' + (Object.keys(mi.c).map(c => CAT_L[c]).join(', ') || 'ništa označeno') + '.');
   newIdeas.slice(0, 3).forEach(t => lines.push(who + ' predlaže temu: „' + t + '”'));
   if (weeks.length && !fresh.length) { const w = merged.week[weeks[0]]; lines.push(who + ': nedjeljna razglednica ' + w.r + '/' + w.n + tail); }
   if (up && !fresh.length && !weeks.length) lines.push(who + ':' + up);
   if (!lines.length) return null;
-  const title = newIdeas.length ? 'Jesi znala? Prijedlog teme' : msgs.length ? 'Jesi znala? Poruka' : likes.length ? 'Jesi znala? Sviđa joj se' : catsChanged ? 'Jesi znala? Interesi' : fresh.length ? 'Jesi znala? Odigrano' : reacts.length ? 'Jesi znala? Reakcija' : weeks.length ? 'Jesi znala? Nedjeljna razglednica' : 'Jesi znala? Novi čin';
+  const title = newFb.length ? 'Jesi znala? Poruka' : newIdeas.length ? 'Jesi znala? Prijedlog teme' : msgs.length ? 'Jesi znala? Poruka' : likes.length ? 'Jesi znala? Sviđa joj se' : catsChanged ? 'Jesi znala? Interesi' : fresh.length ? 'Jesi znala? Odigrano' : reacts.length ? 'Jesi znala? Reakcija' : weeks.length ? 'Jesi znala? Nedjeljna razglednica' : 'Jesi znala? Novi čin';
   return [title, lines.join('\n')];
 }
 

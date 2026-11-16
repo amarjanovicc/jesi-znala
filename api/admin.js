@@ -84,7 +84,10 @@ module.exports = async (req, res) => {
         const last = s.letters.filter(l => l.msg).sort((a, b) => String(b.mt).localeCompare(String(a.mt)))[0];
         s.likeCats = {}; s.letters.filter(l => l.lk).forEach(l => { const c = facts[l.i] && facts[l.i].cat; if (c) s.likeCats[c] = (s.likeCats[c] || 0) + 1; });
         s.today = todayOf(p.rec.state, titles); s.ua = p.rec.ua || '';
-        s.lastMsg = last ? { i: last.i, title: last.title, msg: last.msg, mt: last.mt } : null; s.messages = s.letters.filter(l => l.msg).length; delete s.letters;
+        const gf = (s.fb || []).slice(-1)[0];
+        s.lastMsg = last ? { i: last.i, title: last.title, msg: last.msg, mt: last.mt } : null;
+        if (gf && (!last || gf.d > String(last.mt))) s.lastMsg = { i: -1, title: 'Općenito', msg: gf.t, mt: gf.d };
+        s.messages = s.letters.filter(l => l.msg).length + (s.fb || []).length; delete s.letters;
         return Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null }, s);
       }).sort((a, b) => String(b.seen).localeCompare(String(a.seen)));
       return send(200, { players: list });
