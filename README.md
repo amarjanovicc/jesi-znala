@@ -228,4 +228,4 @@ gh release create v1.1.0 --title "v1.1.0" --notes-file <(sed -n '/^## \[1.1.0\]/
 - **Pisma su javna:** `/api/facts` vraća sva pisma odjednom, uključujući ona koja se tek trebaju otključati. Datum otključavanja kontrolira samo front end.
 - **Bez računa znači bez oporavka:** tko izgubi link za sinkronizaciju, izgubio je napredak (osim ako je lokalno u pregledniku).
 - **Redni broj je ključ:** pisma se ne mogu brisati ni premještati bez gubitka napretka.
-- **Licenca:** još nije odabrana (sva prava pridržana).
+- **Licenca:** [MIT](LICENSE). Kôd smiješ koristiti i mijenjati; sadržaj pisama je moj tekst, pa ga nemoj kopirati bez navođenja izvora.

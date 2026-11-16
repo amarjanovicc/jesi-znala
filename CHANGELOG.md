@@ -2,6 +2,11 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.0.2] - 2026-11-16
+
+### Projekt
+- Dodana MIT licenca (datoteka `LICENSE`, polje `license` u `package.json`, README).
+
 ## [1.0.1] - 2026-11-16
 
 Prilagodba telefonima (mobile first).
