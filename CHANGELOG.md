@@ -2,6 +2,22 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.1.0] - 2026-11-16
+
+Uređaji bez prijave.
+
+### Igra
+- Svaki mobitel pri prvom otvaranju dobije anonimni ID (u `localStorage` i kolačiću `jz_id`, 2 godine); napredak se sam sprema na server.
+- Ako preglednik obriše podatke, a kolačić ostane, napredak se vrati sa servera.
+- Sinkronizacija: povezivanje s drugim uređajem unosom koda, ili odvajanje uređaja (novi ID).
+
+### Admin
+- Popis uređaja s vrstom uređaja (iPhone, Android…), zadnjim posjetom i stanjem današnjeg pisma (otvoreno, rezultat, reakcija); isti sažetak na kartici Pregled.
+- „Resetiraj današnje" briše današnje pismo samo tom uređaju; uređaj to preuzme pri sljedećoj sinkronizaciji.
+
+### Sigurnost
+- Ulaz za sinkronizaciju prima samo zahtjeve iz same igre (zaglavlje `X-JZ`, ista adresa), do 40 KB, najviše 100 uređaja ukupno.
+
 ## [1.0.2] - 2026-11-16
 
 ### Projekt

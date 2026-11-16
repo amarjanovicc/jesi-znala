@@ -188,4 +188,34 @@ async function notify(title, message) {
   return sent;
 }
 
-module.exports = { redis, valid, isObj, clean, merge, summary, rankOf, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify };
+/* ---------- uređaji ---------- */
+
+const MAX_DEVICES = 100;   // gornja granica zapisa, jer je ulaz za sinkronizaciju javan
+
+function deviceOf(ua) {
+  ua = String(ua || '');
+  if (/iPad/.test(ua)) return 'iPad';
+  if (/iPhone|iPod/.test(ua)) return 'iPhone';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua)) return 'Windows';
+  if (/Linux|CrOS/.test(ua)) return 'Linux';
+  return 'Nepoznato';
+}
+
+const zagrebDay = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Zagreb' });
+// Indeks današnjeg pisma prema datumu početka (isto kao u igri), ili -1 ako još nije počelo / nema više pisama.
+function todayIndex(count) {
+  const [y, m, d] = zagrebDay().split('-').map(Number), [sy, sm, sd] = String(config().start).split('-').map(Number);
+  const i = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(sy, sm - 1, sd)) / 86400000);
+  return i >= 0 && i < count ? i : -1;
+}
+// Sažetak današnjeg pisma za jedan uređaj: je li otvoreno, rezultat, reakcija.
+function todayOf(st, titles) {
+  const i = todayIndex(titles.length);
+  if (i < 0) return null;
+  const x = st.f[i];
+  return { i, title: titles[i], played: !!x, score: x ? x.r.filter(Boolean).length : 0, re: (x && x.re) || '', msg: (x && x.msg) || '', learned: !!x && x.due == null };
+}
+
+module.exports = { MAX_DEVICES, deviceOf, zagrebDay, todayIndex, todayOf, redis, valid, isObj, clean, merge, summary, rankOf, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify };

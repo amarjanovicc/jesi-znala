@@ -1,6 +1,6 @@
 // Sinkronizacija napretka. Pristup ima samo tko zna dugi nasumični kod; "watch" kod daje samo pregled.
 // Uz to evidentira igrača i šalje adminu obavijest kad igrač uđe u igru ili odigra pismo.
-const { redis, valid, clean, merge, summary, rankOf, getFacts, notify } = require('./_lib');
+const { redis, valid, clean, merge, summary, rankOf, getFacts, notify, deviceOf, MAX_DEVICES } = require('./_lib');
 
 const pad = n => String(n).padStart(2, '0');
 const plural = (n, one, few, many) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? one : m >= 2 && m <= 4 && (h < 12 || h > 14) ? few : many; };
@@ -8,7 +8,7 @@ const plural = (n, one, few, many) => { const m = n % 10, h = n % 100; return m 
 const RE = { z: 'Zanimljivo!', k: 'Već je znala.', n: 'Nije znala.' };
 
 // Vraća [naslov, poruka] ili null ako nema ničeg za javiti.
-async function describe({ created, cur, merged, label }) {
+async function describe({ created, cur, merged, label, ua }) {
   const { facts } = await getFacts();
   const titles = facts.map(f => f.title);
   const who = label || 'Ona';
@@ -22,7 +22,7 @@ async function describe({ created, cur, merged, label }) {
   const r0 = rankOf(before), r1 = rankOf(merged), up = r1.index > r0.index ? ' Novi čin: ' + r1.name + '!' : '';
   const tail = ' (' + sum.n + ' ' + plural(sum.n, 'pismo', 'pisma', 'pisama') + ' ukupno, ' + sum.streak + ' ' + plural(sum.streak, 'dan', 'dana', 'dana') + ' zaredom)' + up;
   const ref = i => '№ ' + pad(i + 1) + ' „' + (titles[i] || '?') + '”';
-  if (created) return ['Jesi znala? Novi uređaj', who + ': uređaj je povezan.' + (sum.n ? ' Već ima ' + sum.n + ' ' + plural(sum.n, 'pismo', 'pisma', 'pisama') + '.' : '')];
+  if (created) return ['Jesi znala? Novi uređaj', who + ' (' + ua + '): novi uređaj je povezan.' + (sum.n ? ' Već ima ' + sum.n + ' ' + plural(sum.n, 'pismo', 'pisma', 'pisama') + '.' : '')];
   const lines = [];
   msgs.slice(0, 2).forEach(i => lines.push(who + ' o pismu ' + ref(i) + ': „' + merged.f[i].msg + '”'));
   if (fresh.length) lines.push(who + ': ' + fresh.slice(0, 3).map(i => ref(i) + ' ' + merged.f[i].r.filter(Boolean).length + '/3').join(', ') + (fresh.length > 3 ? ' i još ' + (fresh.length - 3) : '') + tail);
@@ -57,10 +57,13 @@ module.exports = async (req, res) => {
       return fail(400, 'bad');
     }
     if (req.method === 'POST') {
+      // javni ulaz: samo zahtjev iz same igre (posebno zaglavlje, ista adresa), do 40 KB
+      const origin = req.headers.origin;
+      if (req.headers['x-jz'] !== '1' || (origin && origin.replace(/^https?:\/\//, '') !== req.headers.host)) return fail(403, 'forbidden');
       const body = req.body && typeof req.body === 'object' ? req.body : {};
       const { code, watch } = body;
       if (!valid(code) || (watch != null && !valid(watch))) return fail(400, 'bad');
-      if (JSON.stringify(body.state || {}).length > 80000) return fail(413, 'big');
+      if (JSON.stringify(body.state || {}).length > 40000) return fail(413, 'big');
       const raw = await redis(['GET', 'jz:p:' + code]);
       const cur = raw ? JSON.parse(raw) : null;
       if (!cur) {   // novi zapis: najviše 10 na sat po IP-u, da se obavijesti i baza ne mogu zatrpati
@@ -69,22 +72,31 @@ module.exports = async (req, res) => {
         const n = await redis(['INCR', key]);
         if (n === 1) await redis(['EXPIRE', key, 3600]);
         if (n > 10) return fail(429, 'toomany');
+        const total = await redis(['INCR', 'jz:count']);   // ukupan broj uređaja je ograničen
+        if (total > MAX_DEVICES) { await redis(['DECR', 'jz:count']); return fail(429, 'full'); }
       }
       const incoming = clean(body.state);
+      // admin je resetirao pismo: uređaj koji još ne zna za reset ne smije vratiti obrisano
+      const rv = (cur && cur.rv) | 0;
+      if (cur && rv > (body.rv | 0)) {
+        (cur.rst || []).forEach(i => { delete incoming.f[i]; });
+        if (cur.rstDay) delete incoming.days[cur.rstDay];
+      }
       const state = cur ? merge(cur.state, incoming) : incoming;
+      const ua = deviceOf(req.headers['user-agent']);
       const w = (cur && cur.watch) || watch || null;
       const now = new Date().toISOString();
-      await redis(['SET', 'jz:p:' + code, JSON.stringify({ state, watch: w, label: (cur && cur.label) || '', created: (cur && cur.created) || now, seen: now })]);
+      await redis(['SET', 'jz:p:' + code, JSON.stringify({ state, watch: w, label: (cur && cur.label) || '', created: (cur && cur.created) || now, seen: now, ua, rv, rst: (cur && cur.rst) || [], rstDay: (cur && cur.rstDay) || '' })]);
       if (w && !(cur && cur.watch)) await redis(['SET', 'jz:w:' + w, code]);
 
       // obavijest adminu: nikad ne smije srušiti sinkronizaciju
       try {
         const first = await redis(['SET', 'jz:seen:' + code, '1', 'EX', 1800, 'NX']);   // "ušla je" najviše jednom u 30 minuta
-        const msg = await describe({ created: !cur, cur, merged: state, label: cur && cur.label });
+        const msg = await describe({ created: !cur, cur, merged: state, label: cur && cur.label, ua });
         if (msg) await notify(msg[0], msg[1]);
         else if (first === 'OK' && cur) await notify('Jesi znala? Ušla je', (cur.label || 'Ona') + ' je otvorila igru.');
       } catch (e) { /* ignoriraj */ }
-      return res.status(200).json({ state, watch: w });
+      return res.status(200).json({ state, watch: w, rv });
     }
     return fail(405, 'method');
   } catch (e) {

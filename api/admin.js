@@ -1,6 +1,6 @@
 // Admin API: pisma, igrači i obavijesti. Sve osim prijave traži token koji se dobije lozinkom (ADMIN_PASSWORD).
 const crypto = require('crypto');
-const { redis, isObj, summary, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify } = require('./_lib');
+const { redis, isObj, summary, deviceOf, todayOf, todayIndex, zagrebDay, baseFacts, config, getFacts, cleanLetter, passwordOk, makeToken, tokenOk, bearer, tooManyLogins, channels, notify } = require('./_lib');
 
 const MAX_LETTERS = 400;
 
@@ -82,6 +82,7 @@ module.exports = async (req, res) => {
       const list = (await loadPlayers()).map(p => {
         const s = summary(p.rec.state, titles);
         const last = s.letters.filter(l => l.msg).sort((a, b) => String(b.mt).localeCompare(String(a.mt)))[0];
+        s.today = todayOf(p.rec.state, titles); s.ua = p.rec.ua || '';
         s.lastMsg = last ? { i: last.i, title: last.title, msg: last.msg, mt: last.mt } : null; s.messages = s.letters.filter(l => l.msg).length; delete s.letters;
         return Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null }, s);
       }).sort((a, b) => String(b.seen).localeCompare(String(a.seen)));
@@ -92,7 +93,8 @@ module.exports = async (req, res) => {
       const p = (await loadPlayers()).find(x => x.id === q.id);
       if (!p) return send(404, { error: 'missing' });
       const { facts } = await getFacts();
-      return send(200, Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null }, summary(p.rec.state, facts.map(f => f.title))));
+      const titles = facts.map(f => f.title);
+      return send(200, Object.assign({ id: p.id, label: p.rec.label || '', created: p.rec.created || null, seen: p.rec.seen || null, ua: p.rec.ua || '', today: todayOf(p.rec.state, titles) }, summary(p.rec.state, titles)));
     }
 
     if (action === 'createPlayer') {
@@ -101,6 +103,7 @@ module.exports = async (req, res) => {
       const code = rnd(), watch = rnd(), now = new Date().toISOString();
       await redis(['SET', 'jz:p:' + code, JSON.stringify({ state: { f: {}, days: {}, week: {} }, watch, label: String(body.label || '').trim().slice(0, 30), created: now, seen: null })]);
       await redis(['SET', 'jz:w:' + watch, code]);
+      await redis(['INCR', 'jz:count']);
       return send(200, { code, watch });
     }
 
@@ -120,6 +123,19 @@ module.exports = async (req, res) => {
       await redis(['DEL', 'jz:p:' + p.code]);
       await redis(['DEL', 'jz:seen:' + p.code]);
       if (p.rec.watch) await redis(['DEL', 'jz:w:' + p.rec.watch]);
+      if ((await redis(['DECR', 'jz:count'])) < 0) await redis(['SET', 'jz:count', 0]);
+      return send(200, { ok: true });
+    }
+
+    if (action === 'resetToday') {   // briše današnje pismo samo tom uređaju; uređaj to preuzme pri sljedećoj sinkronizaciji
+      if (req.method !== 'POST') return send(405, { error: 'method' });
+      const p = (await loadPlayers()).find(x => x.id === body.id);
+      if (!p) return send(404, { error: 'missing' });
+      const { facts } = await getFacts(), i = todayIndex(facts.length), day = zagrebDay();
+      if (i < 0) return send(400, { error: 'noletter', message: 'Danas nema pisma.' });
+      delete p.rec.state.f[i]; delete p.rec.state.days[day];
+      p.rec.rv = (p.rec.rv | 0) + 1; p.rec.rst = [i]; p.rec.rstDay = day;
+      await redis(['SET', 'jz:p:' + p.code, JSON.stringify(p.rec)]);
       return send(200, { ok: true });
     }
 

@@ -38,7 +38,7 @@ Dnevna igra znanja u obliku pisma: svaki dan stigne jedno **pismo s kratkom pri�
 | **Ponavljanje** | Riješena pisma vraćaju se s jednim pitanjem nakon 2, 5 i 12 dana. Nakon trećeg točnog odgovora pismo je „zapamćeno". |
 | **Nedjeljna razglednica** | Nedjeljom pet pitanja iz cijelog albuma. |
 | **Reakcije i poruke** | Nakon pisma može se dati reakcija i napisati kratka poruka koja stiže adminu. |
-| **Sinkronizacija** | Napredak se može povezati među uređajima kodom u linku, bez računa i lozinki. |
+| **Uređaji i sinkronizacija** | Svaki mobitel dobije anonimni ID bez prijave. Napredak se čuva na serveru i vraća ako preglednik obriše podatke; uređaje se može spojiti kodom u linku. |
 | **Offline** | Aplikacija se može dodati na početni zaslon i radi bez interneta (service worker). |
 
 Tri kategorije pisama: **Povijest**, **Antika** i **Informatika** (kôd podržava i Geografiju).
@@ -180,7 +180,7 @@ Bodovi: **pismo 2**, **čisti žig (3/3) +1**, **zapamćeno pismo +2**. Popis č
 | Ruta | Metoda | Pristup | Opis |
 |---|---|---|---|
 | `/api/facts` | GET | javno | Popis svih pisama. |
-| `/api/progress` | POST | kod u tijelu zahtjeva | Sprema i spaja napredak, zabilježi posjet, šalje obavijesti. |
+| `/api/progress` | POST | kod u tijelu zahtjeva, zaglavlje `X-JZ`, ista adresa | Sprema i spaja napredak, zabilježi posjet, šalje obavijesti. |
 | `/api/progress?code=…` | GET | kod | Provjera postoji li kod. |
 | `/api/progress?watch=…` | GET | kod za praćenje | Sažetak napretka samo za čitanje. |
 | `/api/admin?action=login` | POST | lozinka | Vraća token koji vrijedi 12 sati. |
@@ -190,7 +190,8 @@ Bodovi: **pismo 2**, **čisti žig (3/3) +1**, **zapamćeno pismo +2**. Popis č
 
 - **Bez računa:** igrači nemaju račune ni lozinke. Pristup napretku daje dugi nasumični kod (16 znakova) u linku `/#sync=…`; poseban kod `/#watch=…` daje samo pregled.
 - **Admin:** lozinka se uspoređuje u konstantnom vremenu, token je potpisan (HMAC) i istječe nakon 12 sati, a prijava je ograničena na 8 pokušaja u 15 minuta po IP adresi. Stranica ima `noindex`, `X-Frame-Options: DENY` i Content-Security-Policy.
-- **Zaštita od zlouporabe:** najviše 10 novih zapisa na sat po IP adresi; sve što dolazi od klijenta čisti se i ograničava prije spremanja.
+- **Anonimni ID uređaja:** pri prvom otvaranju igra sama napravi nasumični ID, sprema ga u `localStorage` i u kolačić `jz_id` (2 godine). Ako preglednik obriše podatke, a kolačić ostane, napredak se vrati sa servera; ako obriše i kolačić, uređaj počinje kao novi. Server uz napredak pamti samo vrstu uređaja (npr. iPhone, Android), ništa osobno.
+- **Zaštita od zlouporabe:** ulaz za sinkronizaciju je javan pa prima samo zahtjeve iz same igre (posebno zaglavlje, ista adresa), do 40 KB, najviše 100 uređaja ukupno i 10 novih na sat po IP adresi; sve što dolazi od klijenta čisti se i ograničava prije spremanja.
 - **Podaci:** poslužitelj sprema samo napredak, oznaku igrača, reakcije i poruke te vrijeme zadnjeg ulaska. Obavijesti idu na kanal koji sam postaviš; tema na ntfy je tajna samo dok je nitko ne zna, pa neka bude duga i nasumična.
 - **Sigurnosne kopije:** admin → Pregled → *Preuzmi kopiju*. Izvoz ne sadrži tajne kodove.
 
@@ -226,6 +227,6 @@ gh release create v1.1.0 --title "v1.1.0" --notes-file <(sed -n '/^## \[1.1.0\]/
 
 - **Nema testova ponašanja.** CI provjerava samo sintaksu, valjanost pisama i konfiguraciju; ponašanje igre, admina i obavijesti provjereno je ručno i pomoćnim skriptama koje nisu dio projekta.
 - **Pisma su javna:** `/api/facts` vraća sva pisma odjednom, uključujući ona koja se tek trebaju otključati. Datum otključavanja kontrolira samo front end.
-- **Bez računa znači bez oporavka:** tko izgubi link za sinkronizaciju, izgubio je napredak (osim ako je lokalno u pregledniku).
+- **Bez računa znači ograničen oporavak:** napredak se vraća dok postoji kolačić ili link za sinkronizaciju; kad nestanu oba, uređaj je za sustav novi.
 - **Redni broj je ključ:** pisma se ne mogu brisati ni premještati bez gubitka napretka.
 - **Licenca:** [MIT](LICENSE). Kôd smiješ koristiti i mijenjati; sadržaj pisama je moj tekst, pa ga nemoj kopirati bez navođenja izvora.

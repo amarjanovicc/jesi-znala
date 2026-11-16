@@ -503,13 +503,14 @@ const VIEWS = {
     const base = location.origin + '/';
     let h = '<button class="back" data-act="home">‹ natrag</button><section class="card"><div class="card-h"><span>Sinkronizacija</span><span>' + (SY.code ? 'povezano' : 'isključeno') + '</span></div>';
     if (!SY.code) {
-      h += '<p class="say">Spaja mobitel i laptop da napredak bude isti svugdje. Dobiješ i link kojim netko može pratiti napredak, samo pregled.</p><div class="stack"><button class="btn" data-act="syncon">Uključi</button>' +
+      h += '<p class="say">Napredak se nije mogao povezati s poslužiteljem. Spaja mobitel i laptop da napredak bude isti svugdje. Dobiješ i link kojim netko može pratiti napredak, samo pregled.</p><div class="stack"><button class="btn" data-act="syncon">Uključi</button>' +
         '<label class="lbl" for="codeIn">Već imaš kod?</label><input id="codeIn" class="code-in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="kod s drugog uređaja"><button class="btn alt" data-act="syncjoin">Spoji</button></div>';
     } else {
       h += '<div class="stack"><p class="say">' + (SY.err ? '' : SY.last ? 'Zadnja sinkronizacija u ' + pad(SY.last.getHours()) + ':' + pad(SY.last.getMinutes()) + '.' : 'Povezano.') + '</p>' +
         '<span class="lbl">Link za drugi uređaj</span><code class="lnk">' + base + '#sync=' + SY.code + '</code><button class="btn alt" data-act="copylink" data-t="' + base + '#sync=' + SY.code + '">Kopiraj</button>' +
         (SY.watch ? '<span class="lbl">Link za praćenje (samo pregled)</span><code class="lnk">' + base + '#watch=' + SY.watch + '</code><button class="btn alt" data-act="copylink" data-t="' + base + '#watch=' + SY.watch + '">Kopiraj</button>' : '') +
-        '<button class="back" data-act="syncoff">Prekini vezu na ovom uređaju</button></div>';
+        '<label class="lbl" for="codeIn">Već imaš kod s drugog uređaja?</label><input id="codeIn" class="code-in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="kod s drugog uređaja"><button class="btn alt" data-act="syncjoin">Spoji</button>' +
+        '<button class="back" data-act="syncoff">Odvoji ovaj uređaj (novi ID)</button></div>';
     }
     return h + (SY.err ? '<p class="msg" style="padding-bottom:14px">' + SYMSG[SY.err] + '</p>' : '') + '</section>';
   },
@@ -597,16 +598,20 @@ function startReview() {
 /* ============ SERVER (samo u samostalnoj aplikaciji; u pregledu na claude.ai je isključen) ============ */
 const API = !!window.__API__;
 const SYK = 'jesi-znala-sync';
-let SY = { code: null, watch: null, last: null, err: null };
-try { const o = JSON.parse(localStorage.getItem(SYK)); if (o && o.code) { SY.code = o.code; SY.watch = o.watch || null; } } catch (e) {}
-const saveSY = () => { try { localStorage.setItem(SYK, JSON.stringify({ code: SY.code, watch: SY.watch })); } catch (e) {} };
+let SY = { code: null, watch: null, last: null, err: null, rv: 0 };
+try { const o = JSON.parse(localStorage.getItem(SYK)); if (o && o.code) { SY.code = o.code; SY.watch = o.watch || null; SY.rv = o.rv | 0; } } catch (e) {}
+// Anonimni ID uređaja živi u localStorageu i u kolačiću (2 godine): ako preglednik obriše podatke, kolačić vrati napredak sa servera.
+const CK = 'jz_id';
+const getCk = () => { const m = new RegExp('(?:^|; )' + CK + '=([a-z0-9]{12,32})(?:;|$)').exec(document.cookie); return m ? m[1] : null; };
+const setCk = v => { try { document.cookie = CK + '=' + (v || '') + '; max-age=' + (v ? 63072000 : 0) + '; path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch (e) {} };
+const saveSY = () => { try { localStorage.setItem(SYK, JSON.stringify({ code: SY.code, watch: SY.watch, rv: SY.rv | 0 })); } catch (e) {} setCk(SY.code); };
 const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // pisma s poslužitelja unose se kao HTML, pa se tekst prije toga escapira (admin ne smije slučajno razbiti stranicu)
 const deepEsc = v => typeof v === 'string' ? v.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) : Array.isArray(v) ? v.map(deepEsc) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepEsc(x)])) : v;
 const rnd = n => { const A = 'abcdefghjkmnpqrstuvwxyz23456789', b = new Uint8Array(n); crypto.getRandomValues(b); return Array.from(b, x => A[x % A.length]).join(''); };
 const localOnly = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 async function api(method, path, body) {
-  const r = await fetch(path, { method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
+  const r = await fetch(path, { method, headers: body ? { 'Content-Type': 'application/json', 'X-JZ': '1' } : undefined, body: body ? JSON.stringify(body) : undefined });
   let j = null; try { j = await r.json(); } catch (e) {}
   return { ok: r.ok, status: r.status, j };
 }
@@ -617,18 +622,19 @@ async function pushNow() {
   if (busy) return schedulePush();
   busy = true;
   try {
-    const r = await api('POST', '/api/progress', { code: SY.code, watch: SY.watch, state: { f: S.f, days: S.days, week: S.week || {} } });
+    const r = await api('POST', '/api/progress', { code: SY.code, watch: SY.watch, rv: SY.rv | 0, state: { f: S.f, days: S.days, week: S.week || {} } });
     if (r.ok && r.j && r.j.state) {
       const m = r.j.state; S = { f: m.f || {}, days: m.days || {}, week: m.week || {}, snd: S.snd }; localOnly();
-      if (r.j.watch && r.j.watch !== SY.watch) { SY.watch = r.j.watch; saveSY(); }
+      if ((r.j.watch && r.j.watch !== SY.watch) || (r.j.rv | 0) !== (SY.rv | 0)) { SY.watch = r.j.watch || SY.watch; SY.rv = r.j.rv | 0; saveSY(); }
       SY.err = null; SY.last = new Date();
     } else SY.err = r.status === 503 ? 'nostore' : 'fail';
   } catch (e) { SY.err = 'fail'; }
   busy = false;
   if (V.name === 'home' || V.name === 'sync') paint(false);
 }
+function enrol() { SY = { code: rnd(16), watch: rnd(16), last: null, err: null, rv: 0 }; saveSY(); }
 async function syncOn() {
-  SY = { code: rnd(16), watch: rnd(16), last: null, err: null };
+  SY = { code: rnd(16), watch: rnd(16), last: null, err: null, rv: 0 };
   await pushNow();
   if (SY.err) { const e = SY.err; SY = { code: null, watch: null, last: null, err: e }; }
   saveSY(); paint(false);
@@ -638,10 +644,10 @@ async function syncJoin() {
   if (!/^[a-z0-9]{12,32}$/.test(code)) { SY.err = 'badcode'; return paint(false); }
   let r; try { r = await api('GET', '/api/progress?code=' + code); } catch (e) { SY.err = 'fail'; return paint(false); }
   if (!r.ok) { SY.err = r.status === 404 ? 'badcode' : r.status === 503 ? 'nostore' : 'fail'; return paint(false); }
-  SY = { code, watch: r.j.watch || null, last: null, err: null }; saveSY();
+  SY = { code, watch: r.j.watch || null, last: null, err: null, rv: 0 }; saveSY();
   await pushNow(); paint(false);
 }
-function syncOff() { SY = { code: null, watch: null, last: null, err: null }; saveSY(); paint(false); }
+function syncOff() { enrol(); paint(false); pushNow(); }   // odvaja uređaj: dobiva novi anonimni ID
 async function loadWatch(code) {
   try { const r = await api('GET', '/api/progress?watch=' + code); if (r.ok) V.data = r.j; else V.err = true; } catch (e) { V.err = true; }
   if (V.name === 'watch') paint(false);
@@ -652,8 +658,9 @@ function initSync() {
   if (m) {
     history.replaceState(null, '', location.pathname + location.search);
     if (m[1] === 'watch') { go('watch', { data: null, err: false }, false); loadWatch(m[2]); }
-    else { SY = { code: m[2], watch: null, last: null, err: null }; saveSY(); }
+    else { SY = { code: m[2], watch: null, last: null, err: null, rv: 0 }; saveSY(); }
   }
+  if (!SY.code) { const ck = getCk(); if (ck) { SY = { code: ck, watch: null, last: null, err: null, rv: 0 }; saveSY(); } else enrol(); }   // vrati ID iz kolačića ili ga napravi
   fetch('/api/facts').then(r => r.json()).then(j => {
     if (Array.isArray(j) && j.length >= FACTS.length && j.every(x => x && x.title && x.story && x.cat && Array.isArray(x.quiz) && x.quiz.length === 2)) { FACTS = j.map(deepEsc); if (V.name === 'home') paint(false); }
   }).catch(() => {});

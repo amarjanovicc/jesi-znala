@@ -149,6 +149,8 @@ function today0() { var t = new Date(); t.setHours(0, 0, 0, 0); return t; }
 function rndTopic() { var A = 'abcdefghjkmnpqrstuvwxyz23456789', b = new Uint8Array(20); crypto.getRandomValues(b); return 'jz-' + Array.prototype.map.call(b, function (x) { return A[x % A.length]; }).join(''); }
 function stableTopic() { var t = ''; try { t = localStorage.getItem('jz-topic') || ''; if (!t) { t = rndTopic(); localStorage.setItem('jz-topic', t); } } catch (e) { t = t || rndTopic(); } return t; }
 function copy(btn, text) { var done = function (ok) { btn.textContent = ok ? 'Kopirano' : 'Kopiraj ručno'; }; try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); } }
+function todayText(t) { return !t ? 'Danas nema pisma' : !t.played ? 'Nije otvoreno' : t.score + '/3' + (t.re ? ' · ' + RE_L[t.re] : '') + (t.learned ? ' · zapamćeno' : ''); }
+function dev(p) { return (p.label || 'Bez oznake') + (p.ua ? ' · ' + p.ua : ''); }
 var RE_L = { z: 'Zanimljivo!', k: 'Već je znala', n: 'Nije znala' };
 function note(text, kind) { return h('div', { class: 'msg ' + (kind || 'ok'), role: kind === 'err' ? 'alert' : 'status' }, text); }
 
@@ -224,6 +226,11 @@ async function viewOverview(page) {
     page.appendChild(h('h2', {}, 'Poruke od nje'));
     page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Igrač'), h('th', {}, 'Pismo'), h('th', {}, 'Poruka'), h('th', { class: 'hide-s' }, 'Kada'))),
       h('tbody', {}, withMsg.map(function (p) { return h('tr', { class: 'click', onclick: function () { S.tab = 'players'; S.pid = p.id; render(); } }, h('td', {}, p.label || 'Bez oznake'), h('td', { class: 'hide-s' }, pad(p.lastMsg.i + 1) + ' ' + p.lastMsg.title), h('td', {}, p.lastMsg.msg), h('td', { class: 'hide-s' }, rel(p.lastMsg.mt))); }))));
+  }
+  if (P.length) {
+    page.appendChild(h('h2', {}, 'Danas'));
+    page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Uređaj'), h('th', {}, 'Danas'), h('th', { class: 'hide-s' }, 'Zadnji put'))),
+      h('tbody', {}, P.slice(0, 8).map(function (p) { return h('tr', { class: 'click', onclick: function () { S.tab = 'players'; S.pid = p.id; render(); } }, h('td', {}, dev(p)), h('td', { class: p.today && p.today.played ? 'st-ok' : 'mute' }, todayText(p.today)), h('td', { class: 'hide-s' }, rel(p.seen))); }))));
   }
   page.appendChild(h('h2', {}, 'Zadnja aktivnost'));
   if (!P.length) page.appendChild(h('p', { class: 'mute' }, 'Još nema igrača.'));
@@ -367,18 +374,18 @@ async function viewPlayers(page) {
   };
   var tb = h('tbody'), draw = function () {
     clear(tb);
-    if (!S.players.length) { tb.appendChild(h('tr', {}, h('td', { colspan: 7, class: 'mute' }, 'Još nema igrača. Napravi link iznad, ili neka u igri uključi Sinkronizaciju.'))); return; }
+    if (!S.players.length) { tb.appendChild(h('tr', {}, h('td', { colspan: 8, class: 'mute' }, 'Još nema uređaja. Svaki mobitel koji otvori igru pojavi se ovdje sam, ili napravi link iznad.'))); return; }
     S.players.forEach(function (p) {
       var del = h('button', { class: 'link danger' }, 'Obriši'), armed = false;
       del.onclick = async function (e) { e.stopPropagation(); if (!armed) { armed = true; del.textContent = 'Sigurno?'; setTimeout(function () { armed = false; del.textContent = 'Obriši'; }, 4000); return; } await api('deletePlayer', { id: p.id }); var x = await api('players'); if (x.ok) { S.players = x.j.players; draw(); } };
-      tb.appendChild(h('tr', { class: 'click', onclick: function () { S.pid = p.id; render(); } }, h('td', {}, p.label || h('span', { class: 'mute' }, 'Bez oznake')), h('td', {}, rel(p.seen)), h('td', { class: 'hide-s' }, (p.rank || '-') + ' · ' + p.points), h('td', { class: 'r' }, p.n + ' / ' + p.total), h('td', { class: 'r hide-s' }, p.streak), h('td', { class: 'r hide-s' }, p.perfect), h('td', { class: 'r' }, del)));
+      tb.appendChild(h('tr', { class: 'click', onclick: function () { S.pid = p.id; render(); } }, h('td', {}, p.label || h('span', { class: 'mute' }, 'Bez oznake'), p.ua ? h('div', { class: 'mute small' }, p.ua) : null), h('td', {}, rel(p.seen)), h('td', { class: p.today && p.today.played ? 'st-ok' : 'mute' }, todayText(p.today)), h('td', { class: 'hide-s' }, (p.rank || '-') + ' · ' + p.points), h('td', { class: 'r hide-s' }, p.n + ' / ' + p.total), h('td', { class: 'r hide-s' }, p.streak), h('td', { class: 'r hide-s' }, p.perfect), h('td', { class: 'r' }, del)));
     });
   };
   page.appendChild(h('h2', {}, 'Novi igrač'));
   page.appendChild(h('div', { class: 'tools' }, name, h('button', { class: 'btn primary', onclick: async function (e) { e.target.disabled = true; var x = await api('createPlayer', { label: name.value }); e.target.disabled = false; if (!x.ok) { clear(made).appendChild(note('Nije uspjelo.', 'err')); return; } showLinks(x.j); var y = await api('players'); if (y.ok) { S.players = y.j.players; draw(); } } }, 'Napravi link')));
   page.appendChild(made);
   page.appendChild(h('h2', {}, 'Igrači'));
-  page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Oznaka'), h('th', {}, 'Zadnji put'), h('th', { class: 'hide-s' }, 'Čin · bodovi'), h('th', { class: 'r' }, 'Pisama'), h('th', { class: 'r hide-s' }, 'Niz'), h('th', { class: 'r hide-s' }, 'Čisti žigovi'), h('th', {}, ''))), tb));
+  page.appendChild(h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Uređaj'), h('th', {}, 'Zadnji put'), h('th', {}, 'Danas'), h('th', { class: 'hide-s' }, 'Čin · bodovi'), h('th', { class: 'r hide-s' }, 'Pisama'), h('th', { class: 'r hide-s' }, 'Niz'), h('th', { class: 'r hide-s' }, 'Čisti žigovi'), h('th', {}, ''))), tb));
   draw();
   S.timer = setInterval(async function () { var x = await api('players'); if (x.ok && !S.pid && S.tab === 'players') { S.players = x.j.players; draw(); } }, 30000);
 }
@@ -390,7 +397,11 @@ async function viewPlayer(page) {
   var p = r.j, lab = h('input', { type: 'text', maxlength: 30, value: p.label, placeholder: 'Oznaka', 'aria-label': 'Oznaka igrača', style: 'max-width:220px' }), saved = h('span', { class: 'small mute' });
   page.appendChild(back);
   page.appendChild(h('h1', { style: 'margin-top:6px' }, p.label || 'Igrač'));
-  page.appendChild(h('p', { class: 'mute' }, 'Zadnji put ' + rel(p.seen) + '. Povezan ' + (p.created ? dm(new Date(p.created)) : 'nepoznato.')));
+  page.appendChild(h('p', { class: 'mute' }, (p.ua ? p.ua + '. ' : '') + 'Zadnji put ' + rel(p.seen) + '. Povezan ' + (p.created ? dm(new Date(p.created)) : 'nepoznato.')));
+  var rmsg = h('span', { class: 'small mute' }), rbtn = h('button', { class: 'btn danger', disabled: !(p.today && p.today.played) }, 'Resetiraj današnje'), rarmed = false;
+  rbtn.onclick = async function () { if (!rarmed) { rarmed = true; rbtn.textContent = 'Sigurno? Briše današnji rezultat'; setTimeout(function () { rarmed = false; rbtn.textContent = 'Resetiraj današnje'; }, 4000); return; } rbtn.disabled = true; var x = await api('resetToday', { id: p.id }); if (x.ok) { render(); } else { rmsg.textContent = 'Greška'; rbtn.disabled = false; } };
+  page.appendChild(h('div', { class: 'facts' }, h('div', {}, h('b', {}, p.today ? pad(p.today.i + 1) : '-'), h('span', {}, p.today ? 'današnje pismo: ' + p.today.title : 'danas nema pisma')), h('div', {}, h('b', {}, todayText(p.today)), h('span', {}, 'stanje danas'))));
+  page.appendChild(h('div', { class: 'tools', style: 'margin-top:10px' }, rbtn, rmsg, h('span', { class: 'small mute' }, 'Briše samo ovaj uređaj; sljedeći put može opet odigrati.')));
   page.appendChild(h('div', { class: 'tools' }, lab, h('button', { class: 'btn', onclick: async function () { var x = await api('labelPlayer', { id: p.id, label: lab.value }); saved.textContent = x.ok ? 'Spremljeno' : 'Greška'; } }, 'Spremi oznaku'), saved));
   page.appendChild(h('div', { class: 'facts' }, h('div', {}, h('b', {}, p.rank || '-'), h('span', {}, p.points + ' ' + plural(p.points, 'bod', 'boda', 'bodova'))), h('div', {}, h('b', {}, p.n + ' / ' + p.total), h('span', {}, 'pisama')), h('div', {}, h('b', {}, p.streak), h('span', {}, 'dana zaredom')), h('div', {}, h('b', {}, p.perfect), h('span', {}, 'čistih žigova')), h('div', {}, h('b', {}, p.learned), h('span', {}, 'zapamćeno')), h('div', {}, h('b', {}, p.weeks), h('span', {}, 'nedjeljnih'))));
   var talk = p.letters.filter(function (l) { return l.re || l.msg; });
