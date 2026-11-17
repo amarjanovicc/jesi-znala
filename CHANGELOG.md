@@ -2,6 +2,11 @@
 
 Format prati [Keep a Changelog](https://keepachangelog.com/hr/1.1.0/), a verzije [semantičko verzioniranje](https://semver.org/lang/hr/).
 
+## [1.5.3] - 2026-11-17
+
+### Ispravak
+- Redoslijed ponuđenih odgovora sad se miješa pri svakom prikazu pitanja. Dotad je točan odgovor u svim pismima bio prvi na popisu. Tipke 1 do 4 (i a do d) vrijede za prikazani redoslijed.
+
 ## [1.5.2] - 2026-11-16
 
 ### Sadržaj

@@ -643,11 +643,13 @@ const VIEWS = {
   }
 };
 
+// točan odgovor je u podacima uvijek prvi, pa se redoslijed prikaza miješa pri svakom prikazu pitanja; data-k je izvorni indeks
+function shuffled(n) { const a = Array.from({ length: n }, (_, k) => k); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function optsHtml(item) {
-  return '<div class="opts" id="opts">' + item.opts.map((o, k) => '<button class="opt" data-act="pick" data-k="' + k + '"><span class="box"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M5 16l7 8L26 4"/></svg></span><span class="txt">' + o + '</span></button>').join('') + '</div>';
+  return '<div class="opts" id="opts">' + shuffled(item.opts.length).map(k => [item.opts[k], k]).map(([o, k]) => '<button class="opt" data-act="pick" data-k="' + k + '"><span class="box"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M5 16l7 8L26 4"/></svg></span><span class="txt">' + o + '</span></button>').join('') + '</div>';
 }
 function markOpts(pick, a) {
-  [...$('opts').children].forEach((b, k) => { b.disabled = true;
+  [...$('opts').children].forEach(b => { const k = +b.dataset.k; b.disabled = true;
     if (k === pick) b.classList.add('picked');
     if (k === a) b.classList.add('right'); else if (k === pick) b.classList.add('wrong'); else b.classList.add('dim');
     const s = k === a ? (k === pick ? ' (tvoj odgovor, točno)' : ' (točan odgovor)') : k === pick ? ' (tvoj odgovor, netočno)' : '';
@@ -1070,7 +1072,7 @@ document.addEventListener('keydown', e => {
   if (e.target.id === 'rng' && e.key !== 'Enter') return;
   const k = '1234'.indexOf(e.key) >= 0 ? +e.key - 1 : 'abcd'.indexOf(e.key.toLowerCase());
   const o = $('opts');
-  if (k >= 0 && o && o.children[k] && !V.answered) pick(k);
+  if (k >= 0 && o && o.children[k] && !V.answered) pick(+o.children[k].dataset.k);   // tipke 1-4 i a-d vrijede za prikazani redoslijed
   else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { const m = $('main'); if (m && !m.disabled) main(); }
 });
 
